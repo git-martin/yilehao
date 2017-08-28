@@ -1,0 +1,342 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Config.Models
+@using BntWeb.Environment
+@using BntWeb.FileSystems.Media
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@using BntWeb.Utility.Extensions
+@{
+    ViewBag.Title = ConfigModule.DisplayName;
+    ViewBag.SubTitle = "系统配置";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model BntWeb.Config.Models.SystemConfig
+<form class="form-horizontal" role="form" method="POST" id="ConfigForm" action="@Url.Action("SaveConfig", "SystemConfig", new {area = ConfigModule.Area})">
+    <div class="col-sm-12 widget-container-span" style="padding: 0px;">
+        <div class="widget-box" style="margin: 0px;">
+            <div class="widget-header" style="background-color: #fff; background-image: none; border: 0px; border-bottom: 1px solid #DDD;">
+                <div class="widget-toolbar no-border" style="float: left;">
+                    <ul class="nav nav-tabs" id="myTab2">
+                        <li class="active">
+                            <a data-toggle="tab" href="#basic">系统配置</a>
+                        </li>
+
+                        <li>
+                            <a data-toggle="tab" href="#integral">积分配置</a>
+                        </li>
+
+                        <li>
+                            <a data-toggle="tab" href="#commission">佣金配置</a>
+                        </li>
+
+                        <li>
+                            <a data-toggle="tab" href="#watermark">水印配置</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="widget-body" style="border: 0px;">
+                <div class="widget-main padding-12 no-padding-left no-padding-right">
+                    <div class="tab-content padding-4">
+                        <div id="basic" class="tab-pane in active">
+                            <div class="slim-scroll">
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="StockWarning"> 库存警告 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="text" id="StockWarning" name="StockWarning" placeholder="警告数量" class="col-xs-1 col-sm-1" value="@Model.StockWarning" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="ReduceStock"> 减库存 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <div class="radio">
+                                                <label>
+                                                    <input name="ReduceStock" type="radio" @(Model.ReduceStock == ReduceStock.AfterOrder ? "checked=checked" : "") value="0" class="ace" />
+                                                    <span class="lbl">下单即减库存</span>
+                                                </label>
+                                            </div>
+                                            <div class="radio">
+                                                <label>
+                                                    <input name="ReduceStock" type="radio" @(Model.ReduceStock == ReduceStock.AfterPay ? "checked=checked" : "") value="1" class="ace" />
+                                                    <span class="lbl">付款后减库存</span>
+                                                </label>
+                                            </div>
+                                            <div class="radio">
+                                                <label>
+                                                    <input name="ReduceStock" type="radio" @(Model.ReduceStock == ReduceStock.AfterDeliver ? "checked=checked" : "") value="2" class="ace" />
+                                                    <span class="lbl">发货后减库存</span>
+                                                </label>
+                                            </div>
+                                            <div class="radio">
+                                                <label>
+                                                    <input name="ReduceStock" type="radio" @(Model.ReduceStock == ReduceStock.AfterCompleted ? "checked=checked" : "") value="3" class="ace" />
+                                                    <span class="lbl">完成后减库存</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="CrashApplyOutTime"> 提现超时时间 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="text" id="CrashApplyOutTime" name="CrashApplyOutTime" placeholder="提现超时时间" class="col-xs-1 col-sm-1" value="@Model.CrashApplyOutTime" />小时
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                            </div>
+                        </div>
+
+                        <div id="integral" class="tab-pane">
+                            <div class="slim-scroll" data-height="100">
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="RecommendIntegral"> 推荐积分 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="text" id="RecommendIntegral" name="RecommendIntegral" placeholder="推荐积分" class="col-xs-1 col-sm-1" value="@Model.RecommendIntegral" />分
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="ConsumptionIntegral"> 消费积分 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="text" id="ConsumptionIntegral" name="ConsumptionIntegral" placeholder="消费积分" class="col-xs-1 col-sm-1" value="@Model.ConsumptionIntegral" />元
+                                        </div>
+                                        <span>消费X元赠送1分</span>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="DiscountRate"> 积分折抵 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="text" id="DiscountRate" name="DiscountRate" placeholder="积分折抵" class="col-xs-1 col-sm-1" value="@Model.DiscountRate" />元
+                                        </div>
+                                        <span>每100积分折抵X元</span>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                            </div>
+                        </div>
+
+                        <div id="commission" class="tab-pane">
+                            <div class="slim-scroll" data-height="100">
+                                @*<div class="form-group">
+                                        <label class="col-sm-1 control-label no-padding-right" for="MaxLevel"> 最大分销等级 </label>
+                                        <div class="col-sm-9">
+                                            <div class="clearfix">
+                                                <select name="MaxLevel" id="MaxLevel">
+                                                    @for (int i = 1; i < 10; i++)
+                                                    {
+                                                        <option value="@i" @(Model.MaxLevel == i ? "selected=selected" : "")>@(i)级</option>
+                                                    }
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>*@
+                                <div class="space-4"></div>
+                                <div id="ratesDiv">
+                                    @for (int i = 1; i <= Model.MaxLevel; i++)
+                                    {
+                                        <div class="form-group">
+                                            <label class="col-sm-1 control-label no-padding-right" for="Lv@(i)"> 上@(i)级佣金 </label>
+                                            <div class="col-sm-9">
+                                                <div class="clearfix">
+                                                    <input type="text" id="Lv@(i)" name="Rates" placeholder="上@(i)级佣金" class="col-xs-1 col-sm-1" value="@(Model.Rates.Count < i ? 0 : Model.Rates[i - 1])" />%
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="space-4"></div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="watermark" class="tab-pane">
+                            <div class="slim-scroll">
+                                <div class="form-group">
+                                    <label class="col-sm-1 control-label no-padding-right" for="WaterMarkType"> 水印类型 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <select id="WaterMarkType" name="WaterMarkType">
+                                                <option value="0" @(Model.WaterMark.WaterMarkType == WaterMarkType.None ? "selected=selected" : "")>无水印</option>
+                                                <option value="1" @(Model.WaterMark.WaterMarkType == WaterMarkType.Text ? "selected=selected" : "")>文字水印</option>
+                                                <option value="2" @(Model.WaterMark.WaterMarkType == WaterMarkType.Image ? "selected=selected" : "")>图片水印</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4 mark-public"></div>
+                                <div class="form-group mark-public">
+                                    <label class="col-sm-1 control-label no-padding-right" for="Position"> 位置 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <select id="Position" name="Position">
+                                                <option value="0" @(Model.WaterMark.Position == Position.Center ? "selected=selected" : "")>居中</option>
+                                                <option value="1" @(Model.WaterMark.Position == Position.LeftTop ? "selected=selected" : "")>左上角</option>
+                                                <option value="2" @(Model.WaterMark.Position == Position.RightTop ? "selected=selected" : "")>右上角</option>
+                                                <option value="3" @(Model.WaterMark.Position == Position.LeftDown ? "selected=selected" : "")>左下角</option>
+                                                <option value="4" @(Model.WaterMark.Position == Position.RightDown ? "selected=selected" : "")>右下角</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4 mark-public"></div>
+                                <div class="form-group mark-public">
+                                    <label class="col-sm-1 control-label no-padding-right" for="Opacity"> 透明度 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="hidden" id="Opacity" name="Opacity" placeholder="透明度" class="col-xs-1 col-sm-1" value="@Model.WaterMark.Opacity" />
+                                            <div style="width: 200px"><span class="pull-left">透明</span><span class="pull-right">不透明</span></div>
+                                            <div style="clear:both"></div>
+                                            <div id="OpacitySlider"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4 mark-text"></div>
+                                <div class="form-group mark-text">
+                                    <label class="col-sm-1 control-label no-padding-right" for="WaterMarkText"> 水印文字 </label>
+                                    <div class="col-sm-9">
+                                        <div class="clearfix">
+                                            <input type="text" id="WaterMarkText" name="WaterMarkText" placeholder="水印文字" class="col-xs-2 col-sm-2" value="@Model.WaterMark.WaterMarkText" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4 mark-image"></div>
+                                <div class="form-group mark-image">
+                                    <label class="col-sm-1 control-label no-padding-right" for="WaterMarkImage"> 水印图片 </label>
+                                    <div class="col-sm-8 image">
+                                        <div class="col-sm-10">
+                                            @Html.Action("UploadPartial", "File", new { area = "SystemSettings", controlId = "WaterMarkImage", sourceId = Guid.Empty, moduleKey = ConfigModule.Instance.InnerKey, sourceType = "WaterMarkImage", fileType = FileType.Image, isPublic = false, mediumThumbnailWidth = 300, mediumThumbnailHeight = 100, smallThumbnailWidth = 150, smallThumbnailHeight = 50 })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="space-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9" style="margin-top: 18px;">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        var rates = @MvcHtmlString.Create(Model.Rates.ToJson());
+
+        jQuery(function ($) {
+            bntToolkit.initForm($("#ConfigForm"), {
+                StockWarning: {
+                    digits: true
+                },
+                CrashApplyOutTime: {
+                    digits: true
+                },
+                RecommendIntegral: {
+                    digits: true
+                },
+                ConsumptionIntegral: {
+                    digits: true
+                },
+                DiscountRate: {
+                    digits: true
+                },
+                Rates: {
+                    digits: true
+                }
+            }, null, success);
+
+            $("#MaxLevel").on("change", function() {
+                $("#ratesDiv").html("");
+                var maxLevel = $(this).val();
+                var ratesHtml = "";
+                for (var i = 1; i <= maxLevel; i++) {
+                    var val = rates.length < i ? 0 : rates[i - 1];
+                    ratesHtml += '<div class="form-group"><label class="col-sm-1 control-label no-padding-right" for="Lv' + i + '"> 上' + i + '级佣金 </label><div class="col-sm-9"><div class="clearfix"><input type="text" id="Lv' + i + '" name="Rates" placeholder="上' + i + '级佣金" class="col-xs-1 col-sm-1" value="' + val + '" />%</div></div></div><div class="space-4"></div>';
+                }
+                $("#ratesDiv").html(ratesHtml);
+            });
+
+            $("#WaterMarkType").on("change", function() {
+                var type = $(this).val();
+                swithMarkPanle(type);
+
+            });
+            swithMarkPanle("@((int)Model.WaterMark.WaterMarkType)");
+
+            $("#OpacitySlider" ).css('width','200px').slider({
+                value:@Model.WaterMark.Opacity,
+                range: "min",
+                min: 0,
+                max: 1,
+                step: 0.1,
+                slide: function( event, ui ) {
+                    var val = parseFloat(ui.value);
+                    $('#Opacity').val(val);
+                }
+            });
+
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                rates = [];
+
+                $.each($("input[name='Rates']"), function(i, n) {
+                    rates.push($(n).val());
+                });
+            }
+        }
+
+        function swithMarkPanle(type) {
+            switch (type) {
+                case "0":
+                    {
+                        $(".mark-public").hide();
+                        $(".mark-text").hide();
+                        $(".mark-image").hide();
+                    }
+                    break;
+                case "1":
+                    {
+                        $(".mark-public").show();
+                        $(".mark-text").show();
+                        $(".mark-image").hide();
+                    }
+                    break;
+                case "2":
+                    {
+                        $(".mark-public").show();
+                        $(".mark-text").hide();
+                        $(".mark-image").show();
+                    }
+                    break;
+
+                default:
+            }
+        }
+
+    </script>
+}

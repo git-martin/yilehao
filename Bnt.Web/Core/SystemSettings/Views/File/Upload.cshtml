@@ -1,0 +1,54 @@
+﻿@using Autofac
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+
+@{
+    ViewBag.Title = SystemSettingsModule.DisplayName;
+    ViewBag.SubTitle = "上传文件";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+
+@section Styles{
+    @Styles.Render("~/css/admin/files")
+}
+
+<div id="dropzone">
+    <form action="@Url.Action("SaveUploadedFile","File", new {area = SystemSettingsModule.Area})" method="post" enctype="multipart/form-data" class="dropzone" id="dropzoneForm">
+        <div class="fallback">
+            <input name="file" type="file" multiple="" />
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+
+    @Scripts.Render("~/js/admin/files")
+
+    <script type="text/javascript">
+        jQuery(function ($) {
+            Dropzone.options.dropzoneForm = {
+                init: function () {
+                    this.on("complete", function (data) {
+                        var result = JSON.parse(data.xhr.responseText);
+                        if (!result.Success) {
+                            
+                        }
+                    });
+                },
+                paramName: "file", // The name that will be used to transfer the file
+                maxFilesize: 30, // MB
+
+                addRemoveLinks: false,
+                dictDefaultMessage: '<span class="bigger-150 bolder"><i class="icon-caret-right red"></i> 拖入文件</span> 进行上传 <span class="smaller-80 grey">(或者 点击)</span> <br /> <i class="upload-icon icon-cloud-upload blue icon-3x"></i>',
+                dictResponseError: '文件上传发生错误!',
+                dictRemoveFile: '移除文件',
+                dictFileTooBig: "文件太大({{filesize}}MiB). 文件最大支持: {{maxFilesize}}MiB.",
+                //change the previewTemplate to use Bootstrap progress bars
+                previewTemplate: "<div class=\"dz-preview dz-file-preview\">  <div class=\"dz-details\">    <div class=\"dz-filename\"><span data-dz-name></span></div>    <div class=\"dz-size\" data-dz-size></div>    <img data-dz-thumbnail />  </div>  <div class=\"progress progress-small progress-striped active\"><div class=\"progress-bar progress-bar-success\" data-dz-uploadprogress></div></div>  <div class=\"dz-success-mark\"><span></span></div>  <div class=\"dz-error-mark\"><span></span></div>  <div class=\"dz-error-message\"><span data-dz-errormessage></span></div></div>"
+            };
+        });
+    </script>
+}

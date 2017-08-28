@@ -1,0 +1,192 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Core.SystemSettings.ViewModels
+@using BntWeb.Dashboard.ViewModels
+@using BntWeb.Environment
+@using BntWeb.MemberBase.Models
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = "统计";
+    ViewBag.SubTitle = "统计列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var statisticalReports = ViewBag.StatisticalReports as List<StatisticalReports>;
+}
+
+<div class="form-group">
+    <div class="row">
+        <div class="widget-header" style="background-color: #fff; background-image: none; border: 0px; border-bottom: 1px solid #DDD;">
+            <div class="widget-toolbar no-border" style="float: left;">
+                <ul class="nav nav-tabs" id="myTab2">
+                    <li class="active way" data-id="1">
+                        <a data-toggle="tab" href="#basic">年统计</a>
+                    </li>
+
+                    <li class="way" data-id="2">
+                        <a data-toggle="tab" href="#integral">月统计</a>
+                    </li>
+                    <li class="way" data-id="3">
+                        <a data-toggle="tab" href="#commission">区间统计</a>
+                    </li>
+                    <li class="way" data-id="4">
+                        <a data-toggle="tab" href="#area">地区统计</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-1 col-md-2 col-sm-4 text-center query-form-item">
+                <input type="hidden" id="statisticalway" name="statisticalway" class="form-control" value="1" />
+                <button class="btn btn-sm btn-info" type="submit" id="QueryButton">
+                    <i class="icon-search bigger-110"></i>
+                    查询
+                </button>
+            </div>
+        </div>
+        <div class="widget-body" style="border: 0px;">
+            <div class="widget-main padding-12 no-padding-left no-padding-right">
+                <div class="tab-content padding-4">
+                    <div id="basic" class="tab-pane in active">
+
+                    </div>
+
+                    <div id="integral" class="tab-pane">
+                        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+                            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="year"> 选择年份 </label>
+                            <div class="col-sm-8 col-md-8">
+                                <div class="clearfix">
+                                    <select id="year" name="year">
+                                        @{ var nowyear = DateTime.Now.Year;
+                                            for (var i = nowyear; i >= 2010; i--)
+                                            {
+                                                <option value="@i">@i</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="commission" class="tab-pane">
+                        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+                            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="CreateTimeBegin"> 起始时间 </label>
+                            <div class="col-sm-8 col-md-8">
+                                <div class="clearfix">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" id="CreateTimeBegin" name="CreateTimeBegin" class="form-control" value="@(ViewBag.StartTime ?? "")" />
+                                        <span class="input-group-addon">
+                                            <i class="icon-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+                            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="CreateTimeEnd"> 截至时间 </label>
+                            <div class="col-sm-8 col-md-8">
+                                <div class="clearfix">
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" id="CreateTimeEnd" name="CreateTimeEnd" class="form-control" value="@(ViewBag.EndTime ?? "")" />
+                                        <span class="input-group-addon">
+                                            <i class="icon-calendar"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div id="area" class="tab-pane">
+                        <div class="col-sm-12 col-md-12 col-lg-12 query-form-item">
+                            <label class="col-sm-2 col-md-1 control-label no-padding-right" for="CreateTimeBegin"> 选择地区 </label>
+                            <div class="col-sm-10 col-md-11">
+                                <div class="clearfix">
+                                    <div class="input-group input-group-sm">
+                                        @Html.Action("DistrictSelectPartial", "District", new { area = "SystemSettings", controlId = "State", province = "", city = "", district = "", street = "", level = DistrictSelectLevel.City })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="MembersTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th id="stateTitile">年份</th>
+                        <th>订单数</th>
+                        <th>
+                            销售额
+                        </th>
+                        <th>
+                            退款金额
+                        </th>
+                        <th>
+                            实际销售额
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        @if (statisticalReports != null && statisticalReports.Count > 0)
+                        {
+                            foreach (var statistical in statisticalReports)
+                            {
+                                <td>@(statistical?.Times ?? "")</td>
+                                <td>@(statistical?.OrderNumber ?? 0)</td>
+                                <td>@(statistical?.Sales ?? 0)</td>
+                                <td>@(statistical?.Refund ?? 0)</td>
+                                <td>@((statistical?.OrderNumber ?? 0) - (statistical?.Refund ?? 0))</td>
+                            }
+                        }
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr class="red" style="background:#f7bd7e;">
+                        <th>合计</th>
+                        <th id="TotalOrderNumber"></th>
+                        <th id="TotalSales">
+
+                        </th>
+                        <th id="TotalRefund">
+
+                        </th>
+                        <th id="Total">
+
+                        </th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-datatable")
+    <script type="text/javascript">
+
+        var options = $.datepicker.regional["zh-CN"];
+        options["dateFormat"] = "yy-mm-dd";
+        $("#CreateTimeBegin").datepicker(options);
+        $("#CreateTimeEnd").datepicker(options);
+
+        var url_loadPage = "@Url.Action("ListOnPage", "Statistics", new {area = DashboardModule.Area})";
+
+        $('.way').on("click", function () {
+            var wey = $(this).data('id');
+            $("#statisticalway").val(wey);
+        });
+
+
+
+    </script>
+    @Scripts.Render("~/js/statistical/order")
+}

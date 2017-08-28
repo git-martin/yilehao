@@ -1,0 +1,126 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Wallet.Models
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = WalletModule.DisplayName;
+    ViewBag.SubTitle = ViewBag.WalletType == WalletType.Cash ? "余额明细" : "积分明细";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+<style>
+    .dataTable th.sorting_disabled {
+        color: #707070;
+    }
+</style>
+@section HeaderRight {
+}
+@model Wallet
+<div class="col-xs-12 center">
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="hr hr12 dotted"></div>
+            <div class="clearfix">
+                <div class="grid3">
+                    <span class="bigger-175 red">@(Model.Available + Model.Frozen)</span>
+                    <br>
+                    总额
+                </div>
+                <div class="grid3">
+                    <span class="bigger-175 blue">@Model.Available</span>
+                    <br>
+                    可用
+                </div>
+                <div class="grid3">
+                    <span class="bigger-175 gray">@Model.Frozen</span>
+                    <br>
+                    冻结
+                </div>
+            </div>
+            <div class="hr hr16 dotted"></div>
+        </div>
+
+        <div class="col-sm-6">
+            @if (ViewBag.WalletType == WalletType.Integral)
+            {
+                <div class="col-xs-12 col-sm-6">
+                    <div class="widget-box collapsed">
+                        <div class="widget-header">
+                            <h4>积分操作</h4>
+                            <div class="widget-toolbar">
+                                <a href="#" data-action="collapse">
+                                    <i class="icon-chevron-down"></i>
+                                </a>
+                                <a href="#" data-action="close">
+                                    <i class="icon-remove"></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="widget-body">
+                            <div class="widget-body-inner" style="display: none;">
+                                <div class="widget-main">
+                                    <div>
+                                        <label class="col-xs-12 col-sm-3 no-padding-right" for="Integral">积分</label>
+                                        <div class="col-xs-12 col-sm-9">
+                                            <div class="clearfix">
+                                                <input type="text" id="Integral" name="Integral" placeholder="积分" class="col-xs-10 col-sm-9" value="" />
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <hr>
+                                    <div>
+                                        <label class="col-xs-12 col-sm-3 no-padding-right" for="Remark">备注</label>
+                                        <div class="col-xs-12 col-sm-9">
+                                            <div class="clearfix">
+                                                <input type="text" id="Remark" name="Remark" placeholder="备注" class="col-xs-10 col-sm-9" value="" />
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                    <hr>
+                                    <div style="margin-top: 50px;">
+                                        <div class="clearfix">
+                                            <button class="btn btn-primary btn-sm" id="addIntegral">添加</button>
+                                            <button class="btn btn-danger btn-sm" id="deductIntegral">扣除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="billTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>时间</th>
+                        <th>金额</th>
+                        <th>类型</th>
+                        <th>备注</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-datatable")
+    <script type="text/javascript">
+        var url_loadPage = "@MvcHtmlString.Create(Url.Action("ListOnPage", "Bill", new {area = WalletModule.Area, walletType = ViewBag.WalletType, memberId = ViewBag.MemberId }))";
+
+        var url_append = "@Url.Action("AppendIntegral", "Bill", new {area = WalletModule.Area, memberId = ViewBag.MemberId })";
+        var url_deduct = "@Url.Action("DeductIntegral", "Bill", new {area = WalletModule.Area, memberId = ViewBag.MemberId })";
+    </script>
+    @Scripts.Render("~/js/admin/Wallet/bill/list")
+}

@@ -1,0 +1,221 @@
+﻿@using BntWeb.Environment.Configuration
+@using BntWeb.Security.Identity
+@using BntWeb.UI.Navigation
+@{
+    var menuItems = ViewBag.Menus as IEnumerable<MenuItem>;
+    var currentUser = ViewBag.CurrentUser as User;
+}
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewBag.Title - 后台管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- basic styles -->
+    @Styles.Render("~/css/admin/common")
+    @Styles.Render("~/css/admin/jquery-ui")
+    <!--[if IE 7]-->
+    @Styles.Render("~/css/admin/font-awesome-ie7")
+    <!--[endif]-->
+    <!-- page specific plugin styles -->
+    <!-- fonts -->
+    @*<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,300" />*@
+    @Styles.Render("~/css/admin/colorbox")
+    <!-- ace styles -->
+    @Styles.Render("~/css/admin/ace")
+    @Styles.Render("~/css/bnt")
+    <!--[if lte IE 8]>
+    @Styles.Render("~/css/admin/ace-ie")
+    <!--[endif]-->
+    <!-- inline styles related to this page -->
+    <!-- ace settings handler -->
+    @RenderSection("Styles", required: false)
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    @Scripts.Render("~/js/admin/ie")
+    <!--[endif]-->
+    <!--[if !IE] -->
+    <script type="text/javascript">
+        window.jQuery || document.write("<script src='/Resources/Common/Scripts/jquery-2.0.3.min.js'>" + "<" + "script>");
+    </script>
+    <!--[endif]-->
+    <!--[if IE] -->
+    <script type="text/javascript">
+        window.jQuery || document.write("<script src='/Resources/Common/Scripts/jquery-1.10.2.min.js'>" + "<" + "script>");
+    </script>
+    <!--[endif]-->
+</head>
+<body>
+    <div class="navbar navbar-default" id="navbar">
+        <div class="navbar-container" id="navbar-container">
+            <div class="navbar-header pull-left">
+                <a href="#" class="navbar-brand">
+                    <img src="~/Resources/Common/Images/boclogo.png" alt="" class="pull-left" />
+                    <small style="font-family: '微软雅黑';margin-top:3px; margin-left: 5px;" class="pull-left">
+                        BntWeb后台管理
+                    </small>
+                    <div class="clear"></div>
+                </a><!-- /.brand -->
+            </div><!-- /.navbar-header -->
+            <div class="navbar-header pull-right" role="navigation">
+                <ul class="nav ace-nav">
+                    <li class="light-blue">
+                        <a data-toggle="dropdown" href="#" class="dropdown-toggle">
+                            <img class="nav-user-photo" src="~/Resources/Admin/Avatars/avatar.png" alt="Jason's Photo" />
+                            <span class="user-info">
+                                <small>欢迎光临,</small>
+                                @(currentUser == null ? "" : currentUser.UserName)
+                            </span>
+                            <i class="icon-caret-down"></i>
+                        </a>
+                        <ul class="user-menu pull-right dropdown-menu dropdown-yellow dropdown-caret dropdown-close">
+                            <li>
+                                <a href="@Url.Action("Current","Admin",new {area="SystemUsers"})">
+                                    <i class="icon-user"></i>
+                                    个人资料
+                                </a>
+                            </li>
+                            <li class="divider"></li>
+                            <li>
+                                <a href="@Url.Action("LogOff","User",new {area="SystemUsers"})">
+                                    <i class="icon-off"></i>
+                                    退出
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul><!-- /.ace-nav -->
+            </div><!-- /.navbar-header -->
+        </div><!-- /.container -->
+    </div>
+    <div class="main-container" id="main-container">
+        <div class="main-container-inner">
+            <a class="menu-toggler" id="menu-toggler" href="#">
+                <span class="menu-text"></span>
+            </a>
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-shortcuts" id="sidebar-shortcuts">
+                    <div class="sidebar-shortcuts-mini" id="sidebar-shortcuts-mini">
+                        <span class="btn btn-success"></span>
+                        <span class="btn btn-info"></span>
+                        <span class="btn btn-warning"></span>
+                        <span class="btn btn-danger"></span>
+                    </div>
+                </div><!-- #sidebar-shortcuts -->
+                <ul class="nav nav-list">
+                    @foreach (var menuItem in menuItems)
+                    {
+                        if (menuItem.Items == null || !menuItem.Items.Any())
+                        {
+                            if (!string.IsNullOrWhiteSpace(menuItem.Href.Trim('/')))
+                            {
+                                <li @(menuItem.Selected ? "class=active" : "")>
+                                    <a href="@menuItem.Href">
+                                        <i class="@string.Join(" ", menuItem.Classes.ToArray())"></i>
+                                        <span class="menu-text"> @menuItem.Text </span>
+                                    </a>
+                                </li>
+                            }
+                        }
+                        else
+                        {
+                            <li class="@(menuItem.Selected ? "active open" : "")">
+                                <a href="#" class="dropdown-toggle">
+                                    <i class="@string.Join(" ", menuItem.Classes.ToArray())"></i>
+                                    <span class="menu-text"> @menuItem.Text </span>
+                                    <b class="arrow icon-angle-down"></b>
+                                </a>
+                                <ul class="submenu">
+                                    @foreach (var menu in menuItem.Items)
+                                    {
+                                        <li @(menu.Selected ? "class=active" : "")>
+                                            <a href="@menu.Href">
+                                                <i class="icon-double-angle-right"></i>
+                                                @menu.Text
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        }
+                    }
+                </ul><!-- /.nav-list -->
+                <div class="sidebar-collapse" id="sidebar-collapse">
+                    <i class="icon-double-angle-left" data-icon1="icon-double-angle-left" data-icon2="icon-double-angle-right"></i>
+                </div>
+            </div>
+            <div class="main-content">
+                <div class="breadcrumbs" id="breadcrumbs">
+                    <ul class="breadcrumb">
+                        <li>
+                            <i class="icon-home home-icon"></i>
+                            <a href="/@HostConstConfig.AdminDirectory">首页</a>
+                        </li>
+                        <li class="active">@ViewBag.Title</li>
+                    </ul><!-- .breadcrumb -->
+                </div>
+                <div class="page-content">
+                    <div class="page-header">
+                        <h1>
+                            @ViewBag.Title
+                            @if (!string.IsNullOrWhiteSpace(ViewBag.SubTitle))
+                            {
+                                <small>
+                                    <i class="icon-double-angle-right"></i>
+                                    &nbsp; &nbsp;@ViewBag.SubTitle
+                                </small>
+                            }
+                            <span class="pull-right">
+                                @RenderSection("HeaderRight", required: false)
+                            </span>
+                        </h1>
+                    </div><!-- /.page-header -->
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <!-- PAGE CONTENT BEGINS -->
+                            @RenderBody()
+                            <!-- PAGE CONTENT ENDS -->
+                        </div><!-- /.col -->
+                    </div><!-- /.row -->
+                </div><!-- /.page-content -->
+            </div><!-- /.main-content -->
+        </div><!-- /.main-container-inner -->
+        <a href="#" id="btn-scroll-up" class="btn-scroll-up btn btn-sm btn-inverse">
+            <i class="icon-double-angle-up icon-only bigger-110"></i>
+        </a>
+    </div><!-- /.main-container -->
+    @Scripts.Render("~/js/admin/common")
+    <!-- page specific plugin scripts -->
+    <!--[if lte IE 8]>
+      <script src="~/Resources/Admin/Scripts/excanvas.min.js"></script>
+    <!--[endif]-->
+    @Scripts.Render("~/js/admin/jquery-ui")
+    <!-- ace scripts -->
+    @Scripts.Render("~/js/admin/ace")
+    <!-- bnt scripts -->
+    @Scripts.Render("~/js/bnt")
+    <!-- inline scripts related to this page -->
+    @Scripts.Render("~/js/admin/colorbox")
+    <div style="display: none">
+        <div>
+            <input type="checkbox" checked="checked" class="ace ace-checkbox-2" id="ace-settings-navbar" />
+            <label class="lbl" for="ace-settings-navbar"> 固定导航条</label>
+        </div>
+        <div>
+            <input type="checkbox" checked="checked" class="ace ace-checkbox-2" id="ace-settings-sidebar" />
+            <label class="lbl" for="ace-settings-sidebar"> 固定滑动条</label>
+        </div>
+        <div>
+            <input type="checkbox" checked="checked" class="ace ace-checkbox-2" id="ace-settings-breadcrumbs" />
+            <label class="lbl" for="ace-settings-breadcrumbs">固定面包屑</label>
+        </div>
+    </div>
+    @RenderSection("Scripts", required: false)
+    <script type="text/javascript">
+        try { ace.settings.check('navbar', 'fixed') } catch (e) { }
+        //try { ace.settings.check('main-container', 'fixed') } catch (e) { }
+        //try { ace.settings.check('sidebar', 'fixed') } catch (e) { }
+        //try { ace.settings.check('breadcrumbs', 'fixed') } catch (e) { }
+    </script>
+</body>
+</html>

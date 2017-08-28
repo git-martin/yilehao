@@ -1,0 +1,47 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@using Permissions = BntWeb.Mall.Permissions
+@{
+    ViewBag.Title = MallModule.DisplayName;
+    ViewBag.SubTitle = "商品分类";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+
+@section HeaderRight {
+    @if (authService.TryCheckAccess(Permissions.ManageGoodsCategorie, user))
+    {
+        <a class="btn btn-info" href="@Url.Action("Create", "GoodsCategory", new {area = MallModule.Area})">
+            <i class="icon-plus bigger-110"></i>
+            新增
+        </a>
+    }
+}
+
+<div class="row">
+    <div class="col-sm-12" id="CategoryList">
+    </div>
+</div>
+<div id="pageDiv">
+</div>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-nestable")
+    <script type="text/javascript">
+        var canEditCarousel =@authService.TryCheckAccess("BntWeb-Carousel-EditCarousel", user).ToString().ToLower();
+        var canEditAdvert =@authService.TryCheckAccess("BntWeb-Advertisement-EditAdvertisement", user).ToString().ToLower();
+
+        var url_loadPage = "@Url.Action("ListOnPage", "GoodsCategory", new {area = MallModule.Area})";
+        var url_create = "@Url.Action("Create", "GoodsCategory", new {area = MallModule.Area})";
+        var url_edit = "@Url.Action("Edit", "GoodsCategory", new {area = MallModule.Area})";
+        var url_delete = "@Url.Action("Delete", "GoodsCategory", new {area = MallModule.Area})";
+
+        var url_addCarousel = "@Url.Action("Add", "Admin", new {area = "Carousel", sourceType= "GoodsCategory", sourceId= "[sourceId]", sourceTitle = "[sourceTitle]", viewUrl = "[viewUrl]", moduleKey = MallModule.Key, moduleName = MallModule.DisplayName })";
+        var url_sendAdvert = "@Url.Action("Send", "Admin", new {area = "Advertisement", sourceType= "GoodsCategory", sourceId= "[sourceId]", sourceTitle = "[sourceTitle]", viewUrl = "[viewUrl]", moduleKey = MallModule.Key, moduleName = MallModule.DisplayName })";
+
+    </script>
+    @Scripts.Render("~/js/admin/mall/goodscategories/list")
+}

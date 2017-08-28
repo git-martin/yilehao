@@ -1,0 +1,175 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = SystemUsersModule.DisplayName;
+    ViewBag.SubTitle = "新建用户";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var roles = ViewBag.Roles as List<Role>;
+    var editMode = (bool)ViewBag.EditMode;
+    if (editMode)
+    {
+        ViewBag.SubTitle = "编辑用户";
+    }
+}
+
+<form class="form-horizontal" role="form" id="UserForm" action="@Url.Action("EditOnPost", "Admin", new { area = SystemUsersModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="UserName"> 用户名 </label>
+        <input type="hidden" id="UserId" name="UserId" value="@Model.Id" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="UserName" name="UserName" placeholder="用户名" class="col-xs-10 col-sm-5" @(editMode ? "readonly=true" : "") value="@Model.UserName" />
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Password"> @(editMode ? "旧密码" : "密码") </label>
+
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="password" id="Password" name="Password" placeholder="@(editMode?"不修改密码请留空":"密码")" class="col-xs-10 col-sm-5" />
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Password2"> @(editMode ? "新密码" : "确认密码") </label>
+
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="password" id="Password2" name="Password2" placeholder="@(editMode ? "新密码" : "确认密码")" class="col-xs-10 col-sm-5" />
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Email"> Email </label>
+
+        <div class="col-sm-9">
+            <span class="input-icon">
+                <input type="text" id="Email" name="Email" placeholder="Email地址" style="width:300px;" value="@Model.Email" />
+                <i class="icon-envelope blue"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="PhoneNumber"> 手机 </label>
+
+        <div class="col-sm-9">
+            <span class="input-icon">
+                <input type="text" id="PhoneNumber" name="PhoneNumber" placeholder="手机号码" style="width: 300px;" value="@Model.PhoneNumber" />
+                <i class="icon-phone green"></i>
+            </span>
+        </div>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <div class="widget-box">
+            <div class="widget-header">
+                <h4>所属角色</h4>
+            </div>
+
+            <div class="widget-body">
+                <div class="message-list-container">
+                    <div class="message-list" id="message-list">
+                        @foreach (var role in roles)
+                        {
+                            var selectRoles = Model.AllRoles as List<Role>;
+                            var selected = selectRoles.Any(r => r.Name.Equals(role.Name, StringComparison.OrdinalIgnoreCase));
+                        <div class="message-item">
+                            <label class="inline">
+                                <input type="checkbox" name="Roles" value="@role.Name" class="ace" @(selected ? "checked" : "") />
+                                <span class="lbl"></span>
+                            </label>
+
+                            <span class="sender" title="Philip Markov">@role.DisplayName</span>
+
+                            <span class="summary">
+                                <span class="text">
+                                    @role.Description
+                                </span>
+                            </span>
+                        </div>
+
+                        }
+                    </div>
+                </div><!-- /.message-list-container -->
+            </div>
+        </div>
+        <!-- /row -->
+    </div>
+
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+            &nbsp; &nbsp; &nbsp;
+            @if (!editMode)
+            {
+                <button class="btn" type="reset">
+                    <i class="icon-undo bigger-110"></i>
+                    重置
+                </button>
+            }
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+
+    @Scripts.Render("~/js/admin/jquery-form")
+
+    <script type="text/javascript">
+        var editMode = @editMode.ToString().ToLower();
+        jQuery(function ($) {
+            jQuery.validator.addMethod("phone", function (value, element) {
+                return this.optional(element) || /^1\d{10}?$/.test(value);
+            }, "请输入有效的手机号码");
+
+            bntToolkit.initForm($("#UserForm"), {
+                UserName: {
+                    required: true
+                },
+                Password: {
+                    required: !editMode,
+                    minlength: 6
+                },
+                Password2: {
+                    required: !editMode,
+                    minlength: 6,
+                    equalTo: "#Password"+(editMode?"2":"")
+                },
+                Email: {
+                    email: true
+                },
+                PhoneNumber: {
+                    phone: 'required'
+                }
+            }, null, success);
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "Admin", new {area = SystemUsersModule.Area })";
+            }
+        }
+
+    </script>
+}

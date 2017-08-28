@@ -1,0 +1,129 @@
+﻿@using System.Web.Optimization
+
+@{
+    ViewBag.Title = TagModule.DisplayName;
+    ViewBag.SubTitle = "标签";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="row">
+    <div class="col-md-4 col-sm-4 col-xm-12">
+        <div class="dd" id="TagList">
+        </div>
+    </div>
+
+    <div class="col-md-8 col-sm-8 col-xm-12">
+        <form class="form-horizontal" role="form" id="TagForm" action="@Url.Action("Save", "Admin", new { area = TagModule.Area })">
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Content"> 标签 </label>
+                <input type="text" style="display: none;" id="Id" name="Id" value="" />
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Content" name="Content" placeholder="标签" class="col-xs-10 col-sm-5" value="" />
+                    </div>
+                </div>
+            </div>
+            <div class="space-4"></div>
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Sort"> 排序 </label>
+                <div class="col-sm-4">
+                    <div class="clearfix">
+                        <input type="text" id="Sort" name="Sort" placeholder="从大到小排序" class="col-xs-10 col-sm-5" value="" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="clearfix">
+                <div class="col-md-offset-3 col-md-9">
+                    <button class="btn btn-info" type="submit">
+                        <i class="icon-ok bigger-110"></i>
+                        保存
+                    </button>
+                    <button class="btn" type="reset">
+                        <i class="icon-undo bigger-110"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+
+    <script type="text/javascript">
+        var url_load = "@Url.Action("Load", "Admin", new { area = TagModule.Area })";
+        var url_delete = "@Url.Action("Delete", "Admin", new { area = TagModule.Area })";
+
+        jQuery(function ($) {
+            bntToolkit.initForm($("#TagForm"), {
+                Content: {
+                    required: true,
+                    maxlength: 20
+                },
+                Sort: {
+                    required: true,
+                    digits: true
+                }
+            }, null, success);
+
+            $("#TagList").on("click", ".edit", function () {
+                var id = $(this).data("id");
+                var sort = $(this).data("sort");
+                var content = $(this).data("content");
+
+                $("#Id").val(id);
+                $("#Content").val(content);
+                $("#Sort").val(sort);
+            });
+
+            $("#TagList").on("click", ".delete", function () {
+                var id = $(this).data("id");
+
+                bntToolkit.confirm("删除后不可恢复，确定还要删除该标签吗？", function () {
+                    bntToolkit.post(url_delete, { tagId: id }, function (result) {
+                        if (result.Success) {
+                            load();
+                        } else {
+                            bntToolkit.error(result.ErrorMessage);
+                        }
+                    });
+                });
+            });
+
+            load();
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                $("#TagForm")[0].reset();
+
+                load();
+            }
+        }
+
+        function load() {
+            bntToolkit.post(url_load, {}, function (result) {
+                if (result.Success) {
+                    var tags = result.Data;
+                    var render = '<ol class="dd-list">';
+                    for (var i = 0; i < tags.length; i++) {
+                        var tag = tags[i];
+                        render += '<li class="dd-item" data-id="' + tag.Id + '"><div class="dd-handle">' + tag.Content + '<div class="pull-right action-buttons"><a class="blue edit" href="#" data-id="' + tag.Id + '" data-sort="' + tag.Sort + '" data-content="' + tag.Content + '"><i class="icon-pencil bigger-130"></i></a><a class="red delete" href="#" data-id="' + tag.Id + '"><i class="icon-trash bigger-130"></i></a></div></div></li>';
+                    }
+
+                    render += '</ol>';
+
+                    $("#TagList").html(render);
+                } else {
+                    bntToolkit.error(result.ErrorMessage);
+                }
+            });
+        }
+    </script>
+
+}

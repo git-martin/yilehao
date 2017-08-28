@@ -1,0 +1,183 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Feedback.Models
+@using BntWeb.FileSystems.Media
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = FeedbackModule.DisplayName;
+    ViewBag.SubTitle = "处理反馈";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var editMode = (bool)ViewBag.EditMode;
+    var isView = (bool)ViewBag.IsView;
+    if (isView)
+    {
+        ViewBag.SubTitle = "查看反馈";
+    }
+}
+@model BntWeb.Feedback.Models.Feedback
+
+<form class="form-horizontal" role="form" method="POST" id="FeedbackForm" action="@Url.Action("ProcesseOnPost", "Admin", new { area = FeedbackModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="FeedbackType"> 反馈类型 </label>
+        <div class="col-sm-9">
+            <span class="input-icon">
+                @*<label id="FeedbackType" name="FeedbackType">@Model.FeedbackType</label>*@
+                <select class="form-control" id="FeedbackType" name="FeedbackType" disabled>
+                    <option value="3" @(Model.FeedbackType == FeedbackType.Complaint ? "selected=selected" : "")>投诉</option>
+                    <option value="2" @(Model.FeedbackType == FeedbackType.Message ? "selected=selected" : "")>留言</option>
+                    <option value="1" @(Model.FeedbackType == FeedbackType.Feedback ? "selected=selected" : "")>意见</option>
+                </select>
+            </span>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Content"> 反馈内容 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id"/>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <textarea id="Content" name="Content" maxlength="200" style="height: 120px;" class="col-xs-10 col-sm-5" readonly>@Model.Content</textarea>
+            </div>
+        </div>
+    </div>
+    @{
+        if (!Model.Contact.IsEmpty())
+        {
+            <div class="space-4"></div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label no-padding-right" for="Contact"> 联系方式 </label>
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Contact" name="Contact" placeholder="联系方式" class="col-xs-10 col-sm-5" readonly value="@Model.Contact" />
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    @{
+        if (Model.Images != null && Model.Images.Count > 0)
+        {
+            <div class="space-4"></div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label no-padding-right"> 图片 </label>
+                <div class="col-sm-5">
+                    @{
+                        foreach (var imageFile in Model.Images)
+                        {
+                            <img src="@Url.Content("~/" + imageFile.MediumThumbnail)" style="border: 1px solid #ddd;" class="pull-left" />
+                        }
+                    }
+                </div>
+            </div>
+        }
+    }
+    @*<div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right"> 反馈图片 </label>
+        <div class="col-sm-5">
+            @if (!string.IsNullOrWhiteSpace(Model.CoverImage))
+            {
+                <img src="@Url.Content("~/" + activityImage.MediumThumbnail)" style="border: 1px solid #ddd;" class="pull-left"/>
+            }
+            
+        </div>
+    </div>*@
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="CreateTime"> 反馈时间 </label>
+        <div class="col-sm-9">
+            <span class="input-icon">
+                <input type="text" id="CreateTime" name="CreateTime" placeholder="反馈时间" style="width:300px;" readonly value="@Model.CreateTime.ToString("yyyy-MM-dd HH:mm:ss")" />
+                <i class="icon-calendar light-orange"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="ProcesseStatus"> 处理状态 </label>
+        <div class="col-sm-9">
+            <span class="input-icon">
+                <select class="form-control" id="ProcesseStatus" name="ProcesseStatus" @(editMode ? "" : "disabled")>
+                    <option value="0" @(Model.ProcesseStatus == ProcesseStatus.Untreated ? "selected=selected" : "")>未处理</option>
+                    <option value="1" @(Model.ProcesseStatus == ProcesseStatus.Processed ? "selected=selected" : "")>已处理</option>
+                </select>
+            </span>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="ProcesseRemark"> 处理意见 </label>
+        <div class="col-sm-9">
+            <div class="=clearfix">
+                <textarea id="ProcesseRemark" name="ProcesseRemark" maxlength="200" style="height: 120px;" class="col-xs-10 col-sm-5" @(editMode ? "" : "readonly=true")>@Model.ProcesseRemark</textarea>
+            </div>
+        </div>
+    </div>
+
+    @{
+        if (!editMode)
+        {
+            <div class="space-4"></div>
+            <div class="form-group">
+                <label class="col-sm-1 control-label no-padding-right" for="ProcesseTime"> 处理时间 </label>
+                <div class="col-sm-9">
+                    <span class="input-icon">
+                        <input type="text" id="ProcesseTime" name="ProcesseTime" placeholder="处理时间" style="width: 300px;" @(editMode ? "" : "readonly=true") value="@(Model.ProcesseTime == null ? "" : DateTime.Parse(Model.ProcesseTime.ToString()).ToString("yyyy-MM-dd HH:mm:ss"))" />
+                        <i class="icon-calendar light-orange"></i>
+                    </span>
+                </div>
+            </div>
+        }
+    }
+    @{
+        if (!isView)
+        {
+            <div class="clearfix form-actions">
+                <div class="col-md-offset-3 col-md-9">
+                    <button class="btn btn-info" type="submit">
+                        <i class="icon-ok bigger-110"></i>
+                        保存
+                    </button>
+                    &nbsp; &nbsp; &nbsp;
+                    @if (editMode)
+                    {
+                        <button class="btn" type="reset">
+                            <i class="icon-undo bigger-110"></i>
+                            重置
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    }
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        var editMode = @editMode.ToString().ToLower();
+        jQuery(function($) {
+            if (editMode) {
+                var options = $.datepicker.regional["zh-CN"];
+                options["dateFormat"] = "yy-mm-dd";
+                //$("#CreateTime").datetimepicker(options);
+                $("#ProcesseTime").datetimepicker(options);
+            }
+
+            bntToolkit.initForm($("#FeedbackForm"), {
+                
+            }, null, success);
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "Admin", new {area = FeedbackModule.Area})";
+            }
+        }
+
+    </script>
+}

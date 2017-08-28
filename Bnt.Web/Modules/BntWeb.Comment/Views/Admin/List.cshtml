@@ -1,0 +1,30 @@
+﻿@using System.Web.Optimization
+
+@{
+    ViewBag.Title = CommentModule.DisplayName;
+    ViewBag.SubTitle = "评论列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var sourceType = ViewBag.SourceType;
+    var sourceId = ViewBag.SourceId;
+}
+
+<div class="row">
+    <div class="col-sm-12" id="CommentList">
+    </div>
+</div>
+
+<div id="pageDiv">
+
+</div>
+
+@section Scripts {
+
+    @Scripts.Render("~/js/admin/jquery-nestable")
+
+    <script type="text/javascript">
+        var url_loadPage = "@Url.Action("ListOnPage", "Admin", new {area = CommentModule.Area, sourceType, sourceId})";
+        var url_deleteComment = "@Url.Action("Delete", "Admin", new {area = CommentModule.Area})";
+
+    </script>
+    @Scripts.Render("~/js/admin/comments/list")
+}

@@ -1,0 +1,57 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Carousel.Models
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = CarouselModule.DisplayName;
+    ViewBag.SubTitle = "轮播组列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var groups = ViewBag.Groups as List<CarouselGroup>;
+}
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="GroupTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>轮播组名</th>
+                        <th>图片尺寸</th>
+                        <th>
+                            Key
+                        </th>
+                        <th style="width:200px;"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (groups != null)
+                    {
+                        foreach (var group in groups)
+                        {
+                            <tr>
+                                <td><a href="@Url.Action("ItemList", "Admin", new {area = CarouselModule.Area, groupId = group.Id})">@group.Name</a></td>
+                                <td>@group.Width x @group.Height</td>
+                                <td>@group.Key</td>
+                                <td class="center">
+                                    <div class="visible-md visible-lg hidden-sm hidden-xs action-buttons">
+                                        <a class="green" href="@Url.Action("ItemList", "Admin", new { area = CarouselModule.Area, groupId = group.Id })" title="轮播项"><i class="icon-tasks bigger-130"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+}
+

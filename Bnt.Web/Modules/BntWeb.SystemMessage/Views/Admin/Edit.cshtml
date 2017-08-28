@@ -1,0 +1,135 @@
+﻿@{
+    ViewBag.Title = SystemMessageModule.DisplayName;
+    ViewBag.SubTitle = "系统消息";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var messageCategorys = typeof(MessageCategory).GetItems();
+}
+@using System.Web.Optimization
+@using BntWeb.SystemMessage.Models
+@using BntWeb.Utility.Extensions
+@model BntWeb.SystemMessage.Models.SystemMessage
+<div class="col-md-8 col-sm-8 col-xm-12">
+    <form class="form-horizontal" role="form" id="SystemMessageForm" action="@Url.Action("EditOnPost", "Admin", new { area = SystemMessageModule.Area })">
+
+        <div class="form-group">
+            <label class="col-sm-1 control-label no-padding-right" for="Title"> 消息类型 </label>
+            <div class="col-sm-9">
+                <div class="clearfix">
+                    <select id="Category" name="Category" class="col-xs-5 col-sm-3" data-placeholder="消息类型">
+                        @if (messageCategorys != null)
+                        {
+                            foreach (var item in messageCategorys)
+                            {
+                                <option value="@item.Value">@item.Description</option>
+                            }
+                        }
+                    </select>
+
+                </div>
+            </div>
+        </div>
+        <div class="space-4"></div>
+        <div class="form-group">
+            <label class="col-sm-1 control-label no-padding-right" for=""> 选择用户 </label>
+            <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+            <div class="col-sm-9">
+                <label><input name="SentType" type="radio" class="ace" checked value="1"><span class="lbl"> 用户分类 </span></label>
+                <label><input name="SentType" type="radio" class="ace" value="2"><span class="lbl"> 指定用户 </span></label>
+            </div>
+        </div>
+        <div class="space-4"></div>
+        <div class="form-group CategoryUser">
+            <label class="col-sm-1 control-label no-padding-right" for="MemberType"> 选择分类 </label>
+            <div class="col-sm-2 clearfix">
+                <div class="clearfix">
+                    <select class="form-control valid" id="MemberType" name="MemberType" aria-invalid="false">
+                        <option value="">所有用户</option>
+                        @*@{
+                            if (memberTypes != null && memberTypes.Count > 0)
+                            {
+                                foreach (var item in memberTypes)
+                                {
+                                    <option value="@item.Id">@item.MemberTypeName</option>
+                                }
+                            }
+                        }*@
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="space-4"></div>
+        <div class="form-group OnlyUser" style="display: none;">
+            <label class="col-sm-1 control-label no-padding-right" for="UserName"> 输入用户名 </label>
+            <div class="col-sm-9">
+                <div class="clearfix">
+                    <input type="text" id="UserName" name="UserName" placeholder="输入用户名" value="" />
+                    <input type="hidden" id="MemberId" name="MemberId" value="" />
+                </div>
+            </div>
+        </div>
+
+        
+        <div class="form-group">
+            <label class="col-sm-1 control-label no-padding-right" for="Title"> 标题 </label>
+            <div class="col-sm-9">
+                <div class="clearfix">
+                    <input type="text" id="Title" name="Title" placeholder="标题" class="col-xs-10 col-sm-5" value="@Model.Title" />
+                </div>
+            </div>
+        </div>
+        <div class="space-4"></div>
+        <div class="form-group">
+            <label class="col-sm-1 control-label no-padding-right" for="Content"> 消息内容 </label>
+            <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+            <div class="col-sm-9">
+                <div class="clearfix">
+                    <textarea id="Content" name="Content" placeholder="请填写消息内容" maxlength="200" style="height: 120px;" class="col-xs-10 col-sm-5">@Model.Content</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="clearfix">
+            <div class="col-md-offset-3 col-md-9">
+                <button class="btn btn-info" type="submit">
+                    <i class="icon-ok bigger-110"></i>
+                    保存
+                </button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        jQuery(function($) {
+            bntToolkit.initForm($("#SystemMessageForm"), {
+                Content: {
+                    required: true
+                }
+            }, null, success);
+        });
+        //用户类型
+        $('input[name="SentType"]').click(function () {
+            var type = $(this).val();
+            if (type == 1) {
+                $(".CategoryUser").show();
+                $(".OnlyUser").hide();
+            }
+            else if (type == 2) {
+                $(".CategoryUser").hide();
+                $(".OnlyUser").show();
+            }
+        });
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "Admin", new {area = SystemMessageModule.Area})";
+            }
+        }
+
+    </script>
+}

@@ -1,0 +1,48 @@
+﻿@using System.Web.Optimization
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>后台管理</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- basic styles -->
+    @Styles.Render("~/css/admin/common")
+    <!--[if IE 7]-->
+    @Styles.Render("~/css/admin/font-awesome-ie7")
+    <!--[endif]-->
+    <!-- page specific plugin styles -->
+    <!-- fonts -->
+    @*<link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400,300" />*@
+    <!-- inline styles related to this page -->
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    @Scripts.Render("~/js/admin/ie")
+    <!--[endif]-->
+    <link rel="stylesheet" href="/Resources/Admin/Css/login.css" />
+</head>
+@model BntWeb.Core.SystemUsers.ViewModels.LoginViewModel
+<body class="login-body">
+    <div class="container">
+        <form class="form-signin" action="@Url.Action("Login", "User", new { area = SystemUsersModule.Area })" method="post">
+            <div class="form-signin-heading text-center">
+                <h1 class="sign-title">用户登录</h1>
+                <!--<img src="images/login-logo.png" alt=""/>-->
+            </div>
+            <div class="login-wrap">
+                <input type="text" name="UserName" class="form-control" placeholder="用户名" autofocus>
+                <input type="password" name="Password" class="form-control" placeholder="密码">
+                <input type="hidden" name="ReturnUrl" value="@ViewBag.ReturnUrl" />
+                <button class="btn btn-lg btn-login btn-block btn-boc" type="submit" value="登录">
+                    登录
+                </button>
+                <div class="registration">
+
+                </div>
+                <label class="inline">
+                    <span style="color: orangered;">@(Model == null ? "" : Model.ErrorMessage)</span>
+                </label>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

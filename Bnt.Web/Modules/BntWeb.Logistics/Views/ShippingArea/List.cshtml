@@ -1,0 +1,80 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Logistics.Models
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = LogisticsModule.DisplayName;
+    ViewBag.SubTitle = "配送区域";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+<style>
+    .dataTable th.sorting_disabled {
+        color: #707070;
+    }
+</style>
+@section HeaderRight {
+
+    @if (authService.TryCheckAccess(Permissions.EditShippingArea, user))
+    {
+        <a class="btn btn-sm btn-info publish" href="@Url.Action("Edit", "ShippingArea", new {area = LogisticsModule.Area})">
+            <i class="icon-plus bigger-110"></i>
+            新增
+        </a>
+    }
+}
+<div class="form-group">
+    <div class="row">
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-3 control-label no-padding-right" for="Title"> 配送区域名称 </label>
+            <div class="col-sm-8 col-md-9">
+                <div class="clearfix">
+                    <input type="text" id="ShippingAreaName" name="ShippingAreaName" placeholder="配送区域名称" value="" class="col-md-12" />
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-1 col-md-2 col-sm-3 text-center query-form-item">
+            <button class="btn btn-sm btn-info" type="submit" id="QueryButton">
+                <i class="icon-search bigger-110"></i>
+                查询
+            </button>
+        </div>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="ShippingAreasTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>配送区域名称</th>
+                        <th>所辖地区</th>
+                        <th>首重（千克）</th>
+                        <th>费用（元）</th>
+                        <th>续费（元）</th>
+                        <th>时间</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-datatable")
+    <script type="text/javascript">
+        var canEditShipping = @authService.TryCheckAccess(Permissions.EditShippingArea, user).ToString().ToLower();
+        var canDeleteShipping =@authService.TryCheckAccess(Permissions.DeleteShippingArea, user).ToString().ToLower();
+
+        var url_loadPage = "@Url.Action("ListOnPage", "ShippingArea", new {area = LogisticsModule.Area})";
+        var url_editShippingArea = "@Url.Action("Edit", "ShippingArea", new {area = LogisticsModule.Area })";
+        var url_deleteShippingArea = "@Url.Action("Delete", "ShippingArea", new {area = LogisticsModule.Area})";
+
+    </script>
+    @Scripts.Render("~/js/admin/logistics/shippingarea/list")
+}

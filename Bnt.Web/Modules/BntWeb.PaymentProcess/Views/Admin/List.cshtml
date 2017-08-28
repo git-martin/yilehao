@@ -1,0 +1,72 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.PaymentProcess.Models
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = PaymentProcessModule.DisplayName;
+    ViewBag.SubTitle = "支付配置";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var payments = ViewBag.Payments as List<Payment>;
+}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="GroupTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>支付方式</th>
+                        <th>
+                            描述
+                        </th>
+                        <th>状态</th>
+                        <th style="width:200px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (payments != null)
+                    {
+                        foreach (var payment in payments)
+                        {
+                            <tr>
+                                <td>@payment.Name</td>
+                                <td>@payment.Description</td>
+                                <td>@MvcHtmlString.Create(payment.Enabled ? "<span class=\"label label-sm label-success\">已启用</span>" : "<span class=\"label label-sm label-danger\">已禁用</span>")</td>
+                                <td class="center">
+                                    <div class="visible-md visible-lg hidden-sm hidden-xs action-buttons">
+                                        @if (payment.Enabled)
+                                        {
+                                            <a class="red switch" data-id="@payment.Id" data-value="off" href="javascript:;" title="禁用"><i class="icon-circle bigger-130"></i></a>
+                                        }
+                                        else
+                                        {
+                                            <a class="green switch" data-id="@payment.Id" data-value="on" href="javascript:;" title="启用"><i class="icon-circle-blank bigger-130"></i></a>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+
+        $(".switch").on("click", function (e) {
+            var id = $(this).data("id");
+            var val = $(this).data("value");
+            bntToolkit.post("@Url.Action("Switch", "Admin", new {area = PaymentProcessModule.Area })", { Id: id, Enabled: val == "on" }, function (result) {
+                if (result.Success) {
+                    location.reload();
+                } else {
+                    bntToolkit.error(result.ErrorMessage);
+                }
+            });
+        });
+    </script>
+}

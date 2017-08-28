@@ -1,0 +1,137 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Coupon
+@using BntWeb.Coupon.Models
+@using BntWeb.FileSystems.Media
+@using BntWeb.MemberBase.Models
+@using BntWeb.Utility.Extensions
+@{
+    ViewBag.Title = CouponModule.DisplayName;
+    ViewBag.SubTitle = "发放优惠券";
+    var memberTypes = ViewBag.MemberTypes as List<MemberType>;
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model BntWeb.Coupon.Models.Coupon
+<form class="form-horizontal" role="form" id="UserForm" action="@Url.Action("SendCouponOnPost", "Admin", new {area = CouponModule.Area})">
+    <input id="CouponId" type="hidden" name="CouponId" value="@Model.Id" />
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for=""> 优惠券信息 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                名称：@Model.Title
+                @{
+                    if (Model.CouponType == CouponType.FullCut)
+                    {
+                        <br />
+                        <span>条件：满 @Model.Minimum 减 @Model.Money</span>
+                    }
+                    else
+                    {
+                        <br />
+                        <span>折扣率:@Model.Discount 折</span>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for=""> 选择用户 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+        <div class="col-sm-9">
+            <label><input name="SentType" type="radio" class="ace" checked value="1"><span class="lbl"> 用户分类 </span></label>
+            <label><input name="SentType" type="radio" class="ace" value="2"><span class="lbl"> 指定用户 </span></label>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group CategoryUser">
+        <label class="col-sm-1 control-label no-padding-right" for="MemberType"> 选择分类 </label>
+        <div class="col-sm-2 clearfix">
+            <div class="clearfix">
+                <select class="form-control valid" id="MemberType" name="MemberType" aria-invalid="false">
+                    <option value="">所有用户</option>
+                    @*@{
+                        if (memberTypes != null && memberTypes.Count > 0)
+                        {
+                            foreach (var item in memberTypes)
+                            {
+                                <option value="@item.Id">@item.MemberTypeName</option>
+                            }
+                        }
+                    }*@
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group OnlyUser" style="display: none;">
+        <label class="col-sm-1 control-label no-padding-right" for="UserName"> 输入用户名 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="UserName" name="UserName" placeholder="输入用户名" value="" />
+                <input type="hidden" id="MemberId" name="MemberId" value="" />
+            </div>
+        </div>
+    </div>
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                发放
+            </button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        jQuery(function ($) {
+            bntToolkit.initForm($("#UserForm"), {
+
+            }, null, success);
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                bntToolkit.success("发放成功");
+                //location.href = "@Url.Action("List", "Admin", new {area = CouponModule.Area })";
+            }
+        }
+
+        //用户类型
+        $('input[name="SentType"]').click(function () {
+            var type = $(this).val();
+            if (type == 1) {
+                $(".CategoryUser").show();
+                $(".OnlyUser").hide();
+            }
+            else if (type == 2) {
+                $(".CategoryUser").hide();
+                $(".OnlyUser").show();
+            }
+        });
+
+        //回车获取用户
+        @*$("#UserName").keydown(function (event) {
+            if (event.keyCode == 13) {
+                var userName = $("#UserName").val();
+                if (userName == "") {
+                    bntToolkit.error("请输入用户回车");
+                    return false;
+                }
+                var urlGetUser = "@Url.Action("GetUserByUserName", "Admin", new { area = CouponModule.Area })";
+                bntToolkit.post(urlGetUser, { UserName: userName }, function (result) {
+                    if (result.Success) {
+                        $("#MemberId").val(result.Data);
+                    } else {
+                        bntToolkit.error(result.ErrorMessage);
+                    }
+                });
+            }
+        });*@
+    </script>
+}

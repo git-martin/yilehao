@@ -1,0 +1,145 @@
+﻿@using Autofac
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+
+@{
+    ViewBag.Title = SystemSettingsModule.DisplayName;
+    ViewBag.SubTitle = "行政区";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+
+@section Styles {
+    @Styles.Render("~/css/ztree")
+    <style type="text/css">
+        .ztree li span.button.add { margin-left: 2px; margin-right: -1px; background-position: -144px 0; vertical-align: top; *vertical-align: middle; }
+    </style>
+
+}
+
+<div class="row">
+    <div id="treeParent" class="col-md-4 col-sm-4 col-xm-12" style="overflow-y: auto;">
+        <ul id="tree" class="ztree col-md-12"></ul>
+    </div>
+    <div class="col-md-8 col-sm-8 col-xm-12">
+        <form class="form-horizontal" role="form" id="DistrictForm" action="@Url.Action("EditOnPost", "District", new {area = SystemSettingsModule.Area})">
+            <input type="hidden" id="ParentId" name="ParentId" value="0" />
+            <!--0:新增，1:编辑-->
+            <input type="hidden" id="EditMode" name="EditMode" value="0" />
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Parent"> 上级地区 </label>
+
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Parent" name="Parent" readonly="readonly" class="col-sm-6" value="中国" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-4"></div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Id"> 编号 </label>
+
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Id" name="Id" placeholder="地区编号，整数类型" class="col-sm-4" value="" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-4"></div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="FullName"> 全称 </label>
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="FullName" name="FullName" placeholder="地区全称" class="col-xs-12 col-sm-6" value="" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-4"></div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="ShortName">简称</label>
+
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="ShortName" name="ShortName" placeholder="地区简称" class="col-xs-10 col-sm-6" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-4"></div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Lng">经度</label>
+
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Lng" name="Lng" placeholder="地区地理经度" class="col-xs-10 col-sm-4" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-4"></div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Lat">纬度</label>
+
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Lat" name="Lat" placeholder="地区地理纬度" class="col-xs-10 col-sm-4" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-4"></div>
+
+            <div class="form-group">
+                <label class="col-sm-2 control-label no-padding-right" for="Sort"> 排序 </label>
+
+                <div class="col-sm-9">
+                    <div class="clearfix">
+                        <input type="text" id="Sort" name="Sort" placeholder="排序" class="col-sm-4" value="" />
+                    </div>
+                </div>
+            </div>
+            @if(authService.TryCheckAccess(Permissions.EditDistrict, user)){
+            <div class="clearfix form-actions">
+                <div class="col-md-offset-3 col-md-9">
+                    <button class="btn btn-info" type="submit">
+                        <i class="icon-ok bigger-110"></i>
+                        保存
+                    </button>
+                    &nbsp; &nbsp; &nbsp;
+                    <button id="DeleteButton" class="btn btn-danger" style="display: none;" type="button">
+                        <i class="icon-remove bigger-110"></i>
+                        删除
+                    </button>
+                </div>
+            </div>
+            }
+        </form>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    @Scripts.Render("~/js/ztree")
+    @Scripts.Render("~/js/admin/jquery-form")
+
+    <script type="text/javascript">
+        var url_load = "@Url.Action("LoadByParentId", "District", new {area = SystemSettingsModule.Area})";
+        var url_deleteDistrict = "@Url.Action("Delete", "District", new {area = SystemSettingsModule.Area})";
+        var iconOpen = "@Url.Content("~/Resources/Common/Vendors/zTree/css/zTreeStyle/img/diy/1_open.png")";
+        var iconClose = "@Url.Content("~/Resources/Common/Vendors/zTree/css/zTreeStyle/img/diy/1_close.png")";
+
+        var canEditDistrict = @authService.TryCheckAccess(Permissions.EditDistrict, user).ToString().ToLower();
+    </script>
+    @Scripts.Render("~/js/admin/district/index")
+}

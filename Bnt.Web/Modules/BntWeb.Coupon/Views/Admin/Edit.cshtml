@@ -1,0 +1,217 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Coupon
+@using BntWeb.Coupon.Models
+@using BntWeb.FileSystems.Media
+@using BntWeb.Utility.Extensions
+@{
+    ViewBag.Title = CouponModule.DisplayName;
+    ViewBag.SubTitle = "编辑优惠券";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model BntWeb.Coupon.Models.Coupon
+<form class="form-horizontal" role="form" id="UserForm" action="@Url.Action("EditOnPost", "Admin", new { area = CouponModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="CouponType"> 优惠券类型 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <label><input name="CouponType" type="radio" class="ace" value="1" @(Model.CouponType == CouponType.FullCut ? "checked" : "")><span class="lbl"> @CouponType.FullCut.Description() </span></label>
+                <label><input name="CouponType" type="radio" class="ace" value="2" @(Model.CouponType == CouponType.Discount ? "checked" : "")><span class="lbl"> @CouponType.Discount.Description() </span></label>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Title"> 优惠券名称 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Title" name="Title" placeholder="优惠券名称" maxlength="50" class="col-xs-10 col-sm-5" value="@Model.Title" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group FullCut" style="display: @(Model.CouponType == CouponType.FullCut?"block":"none")">
+        <label class="col-sm-1 control-label no-padding-right" for="Money"> 优惠金额 </label>
+        <div class="col-sm-9 clearfix">
+            <div class="clearfix">
+                <input type="text" id="Money" name="Money" placeholder="优惠金额"  style="width: 120px;" value="@Model.Money" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group FullCut" style="display: @(Model.CouponType == CouponType.FullCut?"block":"none")">
+        <label class="col-sm-1 control-label no-padding-right" for="Minimum"> 最低消费金额 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Minimum" name="Minimum" placeholder="最低消费金额"  style="width: 120px;" value="@Model.Minimum" /><span style="color: #aaaaaa;padding-left: 10px;">0表示无门槛代金券</span>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group Discount" style="display: @(Model.CouponType == CouponType.Discount?"block":"none")">
+        <label class="col-sm-1 control-label no-padding-right" for="Discount"> 优惠折扣 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Discount" name="Discount" placeholder="优惠折扣" style="width: 120px;" value="@Model.Discount" /><span style="color: #aaaaaa;padding-left: 10px;">精确到0.1，(0.1~10之间)</span>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Quantity"> 优惠券数量 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Quantity" name="Quantity" placeholder="优惠券数量"  style="width: 120px;" value="@Model.Quantity" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="ExpiryDay"> 有效期 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <label><input name="ExpiryType" type="radio" class="ace" value="1" @(Model.ExpiryType == ExpiryType.ExpiryByDay?"checked":"")><span class="lbl"> 指定天数 </span></label>
+                <label><input name="ExpiryType" type="radio" class="ace" value="2" @(Model.ExpiryType == ExpiryType.ExpiryByDate?"checked":"")><span class="lbl"> 指定日期 </span></label>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group ExpiryByDay" style="display: @(Model.ExpiryType == ExpiryType.ExpiryByDay?"block":"none")">
+        <label class="col-sm-1 control-label no-padding-right" for="ExpiryDay"> 有效期天数 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="ExpiryDay" name="ExpiryDay" placeholder="有效期天数" style="width: 120px;" value="@Model.ExpiryDay"/><span style="color: #aaaaaa;padding-left: 10px;">0表示永久有效</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="space-4"></div>
+    <div class="form-group ExpiryByDate" style="display: @(Model.ExpiryType == ExpiryType.ExpiryByDate?"block":"none");">
+        <label class="col-sm-1 control-label no-padding-right" for="StartTime"> 开始时间 </label>
+        <div class="col-sm-9">
+            <span class="input-icon">
+                <input type="text" id="StartTime" name="StartTime" placeholder="开始时间" style="width: 120px;" value="@(Model.StartTime == null?"": Convert.ToDateTime(Model.StartTime).ToString("yyyy-MM-dd"))" />
+                <i class="icon-calendar light-orange"></i>
+            </span>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group ExpiryByDate" style="display: @(Model.ExpiryType == ExpiryType.ExpiryByDate?"block":"none");">
+        <label class="col-sm-1 control-label no-padding-right" for="EndTime"> 结束时间 </label>
+        <div class="col-sm-9">
+            <span class="input-icon">
+                <input type="text" id="EndTime" name="EndTime" placeholder="结束时间" style="width: 120px;" value="@(Model.EndTime == null?"":  Convert.ToDateTime(Model.EndTime).ToString("yyyy-MM-dd"))" />
+                <i class="icon-calendar light-orange"></i>
+            </span>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Describe"> 使用说明 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <textarea id="Describe" name="Describe" placeholder="20字以内" style="height: 100px;" maxlength="20" class="col-xs-10 col-sm-5">@Model.Describe</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+            <button class="btn" type="reset">
+                <i class="icon-undo bigger-110"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        var options = $.datepicker.regional["zh-CN"];
+        options["dateFormat"] = "yy-mm-dd";
+        $("#StartTime").datepicker(options);
+        $("#EndTime").datepicker(options);
+        jQuery(function ($) {
+            bntToolkit.initForm($("#UserForm"), {
+                Title: {
+                    required: true,maxlength:50
+                },
+                Money: {
+                    number: true
+                },
+                Minimum: {
+                    number: true
+                },
+                Discount: {
+                    number: true, range: [0.1, 10]
+                },
+                Quantity: {
+                    required: true, digits: true
+                },
+                ExpiryDay: {
+                    required: false, digits: true
+                },
+                Describe: {
+                    required: true, maxlength: 100
+                }
+            }, beforeSubmit, success);
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "Admin", new {area = CouponModule.Area })";
+            }
+        }
+
+        function beforeSubmit() {
+            var couponType = $('input[name="CouponType"]:checked').val();
+            if (couponType == 1) {
+                if (parseFloat($("#Money").val()) <= 0 || $("#Money").val() == "") {
+                    bntToolkit.error("优惠金额错误");
+                    return false;
+                }
+            } else {
+                if (parseFloat($("#Discount").val()) <= 0.1 || parseFloat($("#Discount").val()) > 10 || $("#Discount").val() == "") {
+                    bntToolkit.error("优惠折扣错误");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        //所属类型设置
+        $('input[name="ExpiryType"]').click(function () {
+            var type = $(this).val();
+            if (type == 1) {
+                $(".ExpiryByDay").show();
+                $(".ExpiryByDate").hide();
+            }
+            else if (type == 2) {
+                $(".ExpiryByDay").hide();
+                $(".ExpiryByDate").show();
+            }
+        });
+
+        //所属类型设置
+        $('input[name="CouponType"]').click(function () {
+            var type = $(this).val();
+            if (type == 1) {
+                $(".FullCut").show();
+                $(".Discount").hide();
+            }
+            else if (type == 2) {
+                $(".FullCut").hide();
+                $(".Discount").show();
+            }
+        });
+    </script>
+}

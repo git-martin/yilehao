@@ -1,0 +1,115 @@
+﻿@using BntWeb.Core.SystemSettings.Controllers
+@using BntWeb.FileSystems.Media
+@using BntWeb.Utility.Extensions
+@{
+    var controlId = ViewBag.ControlId;
+    var isPublic = ViewBag.IsPublic;
+    var uploadDivId = controlId + "Div";
+    var maxFiles = (int)ViewBag.MaxFiles;
+    var maxFilesize = (int)ViewBag.MaxFilesize;
+    var acceptedFiles = ViewBag.AcceptedFiles;
+    var autoProcessQueue = (bool)ViewBag.AutoProcessQueue;
+    var fileType = ViewBag.FileType as FileType?;
+    var waterMark = (bool)ViewBag.WaterMark;
+    var uploadType = (UploadPartialType)ViewBag.UploadType;
+
+    var mediumThumbnailWidth = ViewBag.MediumThumbnailWidth;
+    var mediumThumbnailHeight = ViewBag.MediumThumbnailHeight;
+    var smallThumbnailWidth = ViewBag.SmallThumbnailWidth;
+    var smallThumbnailHeight = ViewBag.SmallThumbnailHeight;
+    var thumbnailType = ViewBag.ThumbnailType;
+
+    var currentFiles = ViewBag.CurrentFiles as List<StorageFile>;
+}
+<style type="text/css">
+    .dropzone { min-height: 40px; }
+        .dropzone .dz-default { width: 50px; height: 40px; margin-left: -100px; }
+    .selectedfiles li { border: 1px solid #ddd; width: 50px; height: 50px; }
+        .selectedfiles li img { width: 50px; height: 50px; }
+</style>
+
+<div class="pull-left" style="width: 50px; height: 50px; margin: 5px;">
+    @if (uploadType != UploadPartialType.JustSelect)
+    {
+        <div id="@uploadDivId" class="dropzone pull-left" style="height: 50px; width: 40px; padding-top: 10px;">
+
+        </div>
+    }
+    @if (uploadType != UploadPartialType.JustUpload)
+    {
+        <button id="@(controlId)SelectButton" type="button" class="btn btn-minier btn-yellow" style="width: 50px; margin-top: 8px;">选择</button>
+    }
+</div>
+@Styles.Render("~/css/admin/files")
+@Scripts.Render("~/js/admin/files")
+<script type="text/javascript">
+    Dropzone.autoDiscover = true;
+    
+    if(@((uploadType != UploadPartialType.JustSelect).ToString().ToLower()))
+    var @controlId = new Dropzone("div#@uploadDivId", {
+        url: "@MvcHtmlString.Create(Url.Action("SaveUploadedFile", "File", new {area = SystemSettingsModule.Area, isPublic, mediumThumbnailWidth, mediumThumbnailHeight, smallThumbnailWidth, smallThumbnailHeight, thumbnailType, waterMark }))",
+
+        init: function() {
+            this.on("complete", function(response) {
+                if (response.status === 'error') return;
+                var result = JSON.parse(response.xhr.responseText);
+                if (result.Success) {
+                    this.removeAllFiles();
+
+                    if (@(controlId)Callback != undefined)
+                        @(controlId)Callback(result.Data);
+                }
+            });
+            this.on("addedfile", function(file) {
+                $("#@(controlId)UploadButton").show();
+            });
+            this.on("error", function(response,error) {
+                bntToolkit.error(error);
+                this.removeAllFiles();
+            });
+        },
+        drop: null,
+        paramName: "file", // The name that will be used to transfer the file
+        maxFilesize: @maxFilesize, // MB
+        maxFiles: 1,//@maxFiles,
+        acceptedFiles: "@acceptedFiles",
+        autoProcessQueue: @autoProcessQueue.ToString().ToLower(),
+        addRemoveLinks: false,
+        dictDefaultMessage: '<i class="upload-icon icon-cloud-upload blue icon-1x"></i><br/><span style="font-size:10px;">上传</span>',
+        dictResponseError: '文件上传发生错误!',
+        dictRemoveFile: '删除',
+        dictCancelUpload: "取消上传",
+        dictCancelUploadConfirmation: "你确定要取消上传吗?",
+        dictMaxFilesExceeded: "文件数量过多",
+        dictFileTooBig: "文件太大({{filesize}}MiB). 文件最大支持: {{maxFilesize}}MiB.",
+        //change the previewTemplate to use Bootstrap progress bars
+        previewTemplate: "<div class=\"dz-details\" style=\"margin-bottom:0;\"><div class=\"progress progress-small progress-striped active\"><div class=\"progress-bar progress-bar-success\" data-dz-uploadprogress></div></div></div>"
+    });
+    
+    if(@((uploadType != UploadPartialType.JustSelect).ToString().ToLower()))
+    @(controlId).SetWH = function(mediumThumbnailWidth, mediumThumbnailHeight, smallThumbnailWidth, smallThumbnailHeight) {
+        @(controlId).options.url = @(controlId).options.url.replace(/mediumThumbnailWidth=(\d+)/g, "mediumThumbnailWidth=" + mediumThumbnailWidth)
+            .replace(/mediumThumbnailHeight=(\d+)/g, "mediumThumbnailHeight=" + mediumThumbnailHeight)
+            .replace(/smallThumbnailWidth=(\d+)/g, "smallThumbnailWidth=" + smallThumbnailWidth)
+            .replace(/smallThumbnailHeight=(\d+)/g, "smallThumbnailHeight=" + smallThumbnailHeight);
+        $("#@(controlId)Size").html(mediumThumbnailWidth+" x "+mediumThumbnailHeight);
+    }
+
+
+    jQuery(function($) {
+        $(".dropzone").css({ "width": "50px", "height": "40px", "min-height": "40px" });
+        $(".dz-message").css({ "width": "50px", "height": "40px", "margin-left": "-25px", "margin-top": "-27px", "line-height": "0px" });
+        $("#@(controlId)UploadButton").on("click", function() {
+            @(controlId).processQueue();
+        });
+        $("#@(controlId)SelectButton").on("click", function() {
+            bntToolkit.selectFiles(@maxFiles,@(fileType == null ? -1 : (int)fileType) ,[], function(selectedFiles) {
+                for (var i = 0; i < selectedFiles.length; i++) {
+                    var selectedFile = selectedFiles[i];
+                    if (@(controlId)Callback != undefined)
+                        @(controlId)Callback(selectedFile);
+                }
+            });
+        });
+    });
+</script>

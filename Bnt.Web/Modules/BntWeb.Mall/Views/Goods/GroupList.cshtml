@@ -1,0 +1,108 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Environment
+@using BntWeb.Evaluate
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = MallModule.DisplayName;
+    ViewBag.SubTitle = "团购商品列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+<div class="form-group">
+    <div class="row">
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-3 control-label no-padding-right" for="Name"> 商品名称 </label>
+            <div class="col-sm-8 col-md-9">
+                <div class="clearfix">
+                    <input type="text" id="Name" name="Name" placeholder="商品名称" value="" class="col-md-12" />
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-3 control-label no-padding-right" for="GoodsNo"> 货号 </label>
+            <div class="col-sm-8 col-md-9">
+                <div class="clearfix">
+                    <input type="text" id="GoodsNo" name="GoodsNo" placeholder="货号" value="" class="col-md-12" />
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-2 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="Status"> 状态 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <select id="Status" name="Status">
+                        <option value="">所有</option>
+                        <option value="1">在售</option>
+                        <option value="0">未上架</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-4 query-form-item">
+            <button class="btn btn-sm btn-info" type="submit" id="QueryButton">
+                <i class="icon-search bigger-110"></i>
+                查询
+            </button>
+        </div>
+        <div class="col-lg-1 col-md-2 col-sm-3 text-center query-form-item">
+            <button class="btn btn-sm btn-info" type="submit" id="ExpertButton">
+                <i class="icon-expert bigger-110"></i>
+                导出商品
+            </button>
+        </div>
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="GoodsTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th class="col-md-3">商品名称</th>
+                        <th class="col-md-1">货号</th>
+                        <th class="col-md-1">价格</th>
+                        <th class="col-md-1">原价</th>
+                        <th class="col-md-1">上架</th>
+                        <th class="col-md-1">库存</th>
+                        <th class="col-md-1">销量</th>
+                        <th class="col-md-1">预售</th>
+                        <th class="col-md-1">推荐</th>
+                        <th class="col-md-1">团购状态</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-datatable")
+    <script type="text/javascript">
+        var canEditCarousel =@authService.TryCheckAccess("BntWeb-Carousel-EditCarousel", user).ToString().ToLower();
+        var canEditAdvert =@authService.TryCheckAccess("BntWeb-Advertisement-EditAdvertisement", user).ToString().ToLower();
+
+        var url_loadPage = "@Url.Action("GroupListOnPage", "Goods", new {area = MallModule.Area})";
+        var url_editGoods = "@Url.Action("Edit", "Goods", new {area = MallModule.Area})";
+        var url_deleteGoods = "@Url.Action("Delete", "Goods", new {area = MallModule.Area})";
+        var url_batchDeleteGoods = "@Url.Action("BatchDelete", "Goods", new {area = MallModule.Area})";
+        var url_InSaleGoods = "@Url.Action("InSale", "Goods", new {area = MallModule.Area})";
+        var url_NotInSaleGoods = "@Url.Action("NotInSale", "Goods", new {area = MallModule.Area})";
+
+        var url_Evaluate = "@Url.Action("EvaluateList","Goods",new
+                       {
+                           area=MallModule.Area
+                       })";
+
+        var url_addCarousel = "@Url.Action("Add", "Admin", new {area = "Carousel", sourceType= "Goods", sourceId= "[sourceId]", sourceTitle = "[sourceTitle]", viewUrl = "[viewUrl]", moduleKey = MallModule.Key, moduleName = MallModule.DisplayName })";
+        var url_sendAdvert = "@Url.Action("Send", "Admin", new {area = "Advertisement", sourceType= "Goods", sourceId= "[sourceId]", sourceTitle = "[sourceTitle]", viewUrl = "[viewUrl]", moduleKey = MallModule.Key, moduleName = MallModule.DisplayName })";
+        var url_expert = "@Url.Action("GroupGoodsToExecl", "Goods", new {area = MallModule.Area})";
+    </script>
+    @Scripts.Render("~/js/admin/mall/goods/grouplist")
+}

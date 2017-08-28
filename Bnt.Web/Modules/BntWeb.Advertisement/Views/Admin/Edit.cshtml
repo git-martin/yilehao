@@ -1,0 +1,152 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Advertisement.Models
+@using BntWeb.FileSystems.Media
+@{
+    ViewBag.Title = AdvertisementModule.DisplayName;
+    ViewBag.SubTitle = "编辑广告";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var areas = ViewBag.Areas as List<AdvertArea>;
+    var imageWidth = 720;
+    var imageHeight = 280;
+
+    if (Model != null)
+    {
+        imageWidth = Model.ImageWidth;
+        imageHeight = Model.ImageHeight;
+    }
+}
+@model Advert
+<form class="form-horizontal" role="form" id="AdvertForm" action="@Url.Action("EditOnPost", "Admin", new { area = AdvertisementModule.Area})">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="AreaId"> 所属区域 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <span class="input-icon">
+                    <select class="form-control" id="AreaId" name="AreaId">
+                        @if (areas != null)
+                        {
+                            foreach (var area in areas)
+                            {
+                                <option value="@area.Id" @(area.Id == Model.AreaId ? "selected=selected" : "")>@area.Name</option>
+                            }
+                        }
+                    </select>
+                </span>
+                <span class="input-icon">
+                    <select class="form-control" id="Id" name="Id"></select>
+                </span>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" id="SourceId" name="SourceId" value="@Model.SourceId" />
+    <input type="hidden" id="SourceTitle" name="SourceTitle" value="@Model.SourceTitle" />
+    <input type="hidden" id="ModuleKey" name="ModuleKey" value="@Model.ModuleKey" />
+    <input type="hidden" id="ModuleName" name="ModuleName" value="@Model.ModuleName" />
+    <input type="hidden" id="SourceType" name="SourceType" value="@Model.SourceType" />
+    <input type="hidden" id="ViewUrl" name="ViewUrl" value="@Model.ViewUrl" />
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right"> 广告图 </label>
+        <div class="col-sm-8 image">
+            <div class="col-sm-10">
+                @Html.Action("UploadPartial", "File", new { area = "SystemSettings", controlId = "AdvertImage", isPublic = false, sourceId = Model.Id, moduleKey = AdvertisementModule.Key, sourceType = "AdvertImage", fileType = FileType.Image, mediumThumbnailWidth = imageWidth, mediumThumbnailHeight = imageHeight, smallThumbnailWidth = imageWidth / 2, smallThumbnailHeight = imageHeight / 2 })
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Description"> 描述 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Description" name="Description" placeholder="描述" style="width: 300px;" value="@Model.Description" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="ShotUrl"> 短地址 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="ShotUrl" name="ShotUrl"  placeholder="供App端使用的短地址" style="width: 300px;" value="@Model.ShotUrl" />
+            </div>
+        </div>
+    </div>
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button id="SubmitButton" class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        jQuery(function($) {
+            bntToolkit.initForm($("#AdvertForm"), {
+                Id: {
+                    required: true
+                },
+                ShotUrl: {
+                    required: true,
+                    maxlength: 200
+                },
+                AdvertImage: {
+                    required: true
+                },
+                Description: {
+                    maxlength: 200
+                }
+            }, null, success);
+
+            $("#AreaId").on("change", function() {
+                var areaId = $(this).val();
+                bntToolkit.post("@Url.Action("LoadAdvert", "Admin", new {area = AdvertisementModule.Area})", { areaId }, function(result) {
+                    if (result.Success) {
+                        var ads = result.Data;
+                        var ops = "";
+                        var selectedAd = null;
+                        for (var i = 0; i < ads.length; i++) {
+                            var ad = ads[i];
+                            ops += '<option data-width="' + ad.ImageWidth + '" data-height="' + ad.ImageHeight + '" value="' + ad.Id + '" ' + (ad.Id == "@Model.Id" ? "selected=selected" : "") + '>' + ad.Name + '</option>';
+                            if (ad.Id == "@Model.Id") {
+                                selectedAd = ad;
+                            }
+                        }
+
+                        if (selectedAd == null && ads.length > 0) {
+                            selectedAd = ads[0];
+                        }
+                        if (selectedAd != null)
+                            AdvertImage.SetWH(selectedAd.ImageWidth, selectedAd.ImageHeight, selectedAd.ImageWidth / 2, selectedAd.ImageHeight / 2);
+
+                        $("#Id").html(ops);
+                    } else {
+                        bntToolkit.error(result.ErrorMessage);
+                    }
+                });
+
+            });
+            $("#AreaId").trigger("change");
+
+            $("#Id").on("change", function() {
+                var width = $(this).find("option:selected").data("width");
+                var height = $(this).find("option:selected").data("height");
+                AdvertImage.SetWH(width, height, width / 2, height / 2);
+            });
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("AdvertList", "Admin", new {area = AdvertisementModule.Area, areaId = "[areaId]"})".replace("%5BareaId%5D", $("#AreaId").val());
+            }
+        }
+
+
+    </script>
+}

@@ -1,0 +1,49 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Advertisement.Models
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = AdvertisementModule.DisplayName;
+    ViewBag.SubTitle = "广告区域";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var areas = ViewBag.Areas as List<AdvertArea>;
+}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="GroupTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>广告区域</th>
+                        <th>
+                            Key
+                        </th>
+                        <th style="width:200px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (areas != null)
+                    {
+                        foreach (var area in areas)
+                        {
+                            <tr>
+                                <td>@area.Name</td>
+                                <td>@area.Key</td>
+                                <td class="center">
+                                    <div class="visible-md visible-lg hidden-sm hidden-xs action-buttons">
+                                        <a class="green" href="@Url.Action("AdvertList", "Admin", new { area = AdvertisementModule.Area, areaId = area.Id })" title="广告位"><i class="icon-tasks bigger-130"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+}

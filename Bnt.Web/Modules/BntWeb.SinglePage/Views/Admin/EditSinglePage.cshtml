@@ -1,0 +1,99 @@
+﻿@using System.Web.Optimization
+@using BntWeb.SinglePage.Models
+@using BntWeb.FileSystems.Media
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = SinglePageModule.DisplayName;
+    var editMode = (bool)ViewBag.EditMode;
+    ViewBag.SubTitle = (Model == null ? "单页" : Model.Title);
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model BntWeb.SinglePage.Models.SinglePage
+<form class="form-horizontal" method="POST" role="form" id="SinglePageForm" action="@Url.Action("EditOnPost", "Admin", new { area = SinglePageModule.Area })">
+    <div class="form-group" @(editMode ? "style=display:none" : "")>
+        <label class="col-sm-1 control-label no-padding-right" for="Title"> 标题 </label>
+        <input type="text" style="display: none;" id="Id" name="Id" value="@Model.Id" />
+        <input type="text" style="display: none;" id="LastUpdateTime" name="LastUpdateTime" value="" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Title" name="Title" placeholder="标题" class="col-xs-10 col-sm-5" value="@Model.Title" />
+            </div>
+        </div>
+    </div>
+    <div class="form-group" @(editMode ? "style=display:none" : "")>
+        <label class="col-sm-1 control-label no-padding-right" for="SubTitle">副标题 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="SubTitle" name="SubTitle" placeholder="副标题" class="col-xs-10 col-sm-5" value="@Model.SubTitle" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+
+    <div class="form-group" @(editMode ? "style=display:none" : "")>
+        <label class="col-sm-1 control-label no-padding-right" for="Key">Key值 </label>
+        <div class="col-sm-4">
+            <div class="clearfix">
+                <input type="text" id="Key" name="Key" placeholder="key值" class="col-xs-10 col-sm-5" value="@Model.Key" />
+                <h1 id="showResult"></h1>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Content">内容</label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <div class="clearfix">
+                    <textarea id="Content" name="Content" placeholder="请填写内容详情" style="height: 400px; width: 100%" class="col-xs-10 col-sm-12">@Model.Content</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+            <button class="btn" type="reset">
+                <i class="icon-undo bigger-110"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    @Scripts.Render("~/js/kindeditor")
+    <script type="text/javascript">
+        KindEditor.ready(function (K) {
+            K.create('#Content', {
+                afterBlur: function () { this.sync(); }
+            });
+        });
+
+
+        var editMode = @editMode.ToString().ToLower();
+        jQuery(function($) {
+            bntToolkit.initForm($("#SinglePageForm"), {
+                Content: {
+                    required: true
+                },
+                Sort: {
+                    required: true,
+                    digits: true
+                }
+            }, null, success);
+        });
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                bntToolkit.success("保存成功");
+                //location.href = "@Url.Action("List", "Admin", new {area = SinglePageModule.Area})";
+            }
+        }
+
+
+    </script>
+}

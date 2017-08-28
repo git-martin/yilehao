@@ -1,0 +1,60 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+
+@{
+    ViewBag.Title = SystemUsersModule.DisplayName;
+    ViewBag.SubTitle = "角色列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+
+@section HeaderRight {
+    @if (authService.TryCheckAccess(Permissions.EditRole, user))
+    {
+        <a class="btn btn-info" href="@Url.Action("Edit", "Role", new {area = SystemUsersModule.Area})">
+            <i class="icon-plus bigger-110"></i>
+            新建
+        </a>
+    }
+}
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="RolesTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>角色名</th>
+                        <th>
+                            描述
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    @Scripts.Render("~/js/admin/jquery-datatable")
+
+    <script type="text/javascript">
+        var canEditRole = @authService.TryCheckAccess(Permissions.EditRole, user).ToString().ToLower();
+        var canDeleteRole = @authService.TryCheckAccess(Permissions.DeleteRole, user).ToString().ToLower();
+
+        var url_loadPage = "@Url.Action("ListOnPage", "Role", new {area = SystemUsersModule.Area })";
+        var url_editRole = "@Url.Action("Edit", "Role", new {area = SystemUsersModule.Area })";
+        var url_deleteRole = "@Url.Action("Delete", "Role", new {area = SystemUsersModule.Area })";
+    </script>
+
+    @Scripts.Render("~/js/admin/roles/list")
+}

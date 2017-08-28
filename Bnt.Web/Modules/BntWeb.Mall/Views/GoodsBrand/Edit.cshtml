@@ -1,0 +1,96 @@
+﻿@using System.Web.Optimization
+@using BntWeb.FileSystems.Media
+@{
+    ViewBag.Title = MallModule.DisplayName;
+    ViewBag.SubTitle = "编辑品牌";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model BntWeb.Mall.Models.GoodsBrand
+<form class="form-horizontal" role="form" id="GoodsTypeForm" action="@Url.Action("EditOnPost", "GoodsBrand", new { area = MallModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Name"> 品牌名称 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Name" name="Name" placeholder="品牌名称" class="col-xs-6 col-sm-3" value="@Model.Name" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right"> Logo </label>
+        <div class="col-sm-8 image">
+            <div class="col-sm-10">
+                @Html.Action("UploadPartial", "File", new { area = "SystemSettings", controlId = "Logo", sourceId = Model.Id, moduleKey = MallModule.Key, sourceType = "Logo", fileType = FileType.Image, isPublic = false, mediumThumbnailHeight = 320, mediumThumbnailWidth = 320, smallThumbnailWidth = 100, smallThumbnailHeight = 100, thumbnailType = ThumbnailType.TakeCenter })
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="SiteUrl"> 官网 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="SiteUrl" name="SiteUrl" placeholder="品牌官网地址" class="col-xs-6 col-sm-3" value="@Model.SiteUrl" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Description"> 描述 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <textarea id="Description" name="Description" placeholder="请填写描述内容" maxlength="200" style="height: 120px;" class="col-xs-10 col-sm-5">@Model.Description</textarea>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Sort"> 排序 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input id="Sort" name="Sort" type="text" placeholder="从大到小" value="@Model.Sort" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        jQuery(function ($) {
+            bntToolkit.initForm($("#GoodsTypeForm"), {
+                Name: {
+                    required: true,
+                    maxlength: 50
+                },
+                SiteUrl: {
+                    maxlength: 200
+                },
+                Description: {
+                    maxlength: 1000
+                },
+                Sort: {
+                    digits: true
+                }
+            }, null, success);
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "GoodsBrand", new {area = MallModule.Area })";
+            }
+        }
+
+    </script>
+}

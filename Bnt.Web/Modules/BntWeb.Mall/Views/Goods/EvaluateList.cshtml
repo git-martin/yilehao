@@ -1,0 +1,38 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Evaluate
+@{
+    ViewBag.Title = EvaluateModule.DisplayName;
+    ViewBag.SubTitle = "评价列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var sourceType = ViewBag.SourceType;
+    var goodsId = ViewBag.SourceId;
+}
+<div class="row">
+    <div class="col-sm-12" id="EvaluateList">
+    </div>
+</div>
+<div id="pageDiv">
+</div>
+<div style="height:30px;"></div>
+<div class="row">
+    <div class="col-sm-1">
+        <input type="checkbox" name="toggle-all" class="ace">
+        <span class="lbl"></span>
+    </div>
+    <div class="col-sm-11">
+        <button class="btn btn-sm btn-danger" id="batch-delete">批量删除</button>
+        <button class="btn btn-sm btn-danger" id="batch-approve">批量审核</button>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-datatable")
+    <script type="text/javascript">
+
+        var url_loadPage = "@Url.Action("EvaluateListOnPage", "Goods", new {area = MallModule.Area, goodsId})";
+        var url_deleteEvaluate = "@Url.Action("Delete", "Admin", new {area = EvaluateModule.Area})";
+        var url_BatchDelEvaluate = "@Url.Action("BatchDeleteEvaluates", "Admin",new {area=EvaluateModule.Area})";
+        var url_BatchApprEvaluate = "@Url.Action("BatchApproveEvaluates","Admin",new {area=EvaluateModule.Area})";
+
+    </script>
+    @Scripts.Render("~/js/admin/mall/goods/evaluate/list")
+}

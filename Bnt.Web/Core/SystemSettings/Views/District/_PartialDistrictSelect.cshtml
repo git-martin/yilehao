@@ -1,0 +1,161 @@
+﻿@using BntWeb.Core.SystemSettings.Models
+@using BntWeb.Core.SystemSettings.ViewModels
+@{
+    var controlId = ViewBag.ControlId;
+    var provinceId = ViewBag.ProvinceId;
+    var cityId = ViewBag.CityId;
+    var districtId = ViewBag.DistrictId;
+    var streetId = ViewBag.StreetId;
+
+    var provinces = ViewBag.Provinces as List<District>;
+    var citys = ViewBag.Citys as List<District>;
+    var districts = ViewBag.Districts as List<District>;
+    var streets = ViewBag.Streets as List<District>;
+
+    var level = (DistrictSelectLevel)ViewBag.Level;
+}
+<span class="input-icon">
+    <select class="form-control" id="@(controlId + "_Province")" name="@(controlId + "_Province")">
+        <option value="">省份</option>
+        @if (provinces != null)
+        {
+            foreach (var province in provinces)
+            {
+                <option value="@province.Id" data-fullName="@province.FullName" @(province.Id.Equals(provinceId, StringComparison.OrdinalIgnoreCase) ? "selected=selected" : "")>@province.ShortName</option>
+            }
+        }
+    </select>
+</span>
+@if (level >= DistrictSelectLevel.City)
+{
+    <span class="input-icon">
+        <select class="form-control" id="@(controlId + "_City")" name="@(controlId + "_City")">
+            <option value="">城市</option>
+            @if (citys != null)
+            {
+                foreach (var city in citys)
+                {
+                    <option value="@city.Id" data-fullName="@city.FullName" @(city.Id.Equals(cityId, StringComparison.OrdinalIgnoreCase) ? "selected=selected" : "")>@city.ShortName</option>
+                }
+            }
+        </select>
+    </span>
+}
+@if (level >= DistrictSelectLevel.District)
+{
+    <span class="input-icon">
+        <select class="form-control" id="@(controlId + "_District")" name="@(controlId + "_District")">
+            <option value="">区/县</option>
+            @if (districts != null)
+            {
+                foreach (var district in districts)
+                {
+                    <option value="@district.Id" data-fullName="@district.FullName" @(district.Id.Equals(districtId, StringComparison.OrdinalIgnoreCase) ? "selected=selected" : "")>@district.ShortName</option>
+                }
+            }
+        </select>
+    </span>
+}
+@if (level >= DistrictSelectLevel.Street)
+{
+    <span class="input-icon">
+        <select class="form-control" id="@(controlId + "_Street")" name="@(controlId + "_Street")">
+            <option value="">街道/乡镇</option>
+            @if (streets != null)
+            {
+                foreach (var street in streets)
+                {
+                    <option value="@street.Id" data-fullName="@street.FullName" @(street.Id.Equals(streetId, StringComparison.OrdinalIgnoreCase) ? "selected=selected" : "")>@street.ShortName</option>
+                }
+            }
+        </select>
+    </span>
+}
+<script type="text/javascript">
+    var level = @((int)level);
+    jQuery(function($) {
+        $("#@(controlId + "_Province")").change(function() {
+            if (level >= 2) {
+                var cityList = "<option value=\"\">城市</option>";
+                $("#@(controlId + "_City")").html(cityList);
+            }
+            if (level >= 3) {
+                var districtList = "<option value=\"\">区/县</option>";
+                $("#@(controlId + "_District")").html(districtList);
+            }
+            if (level >= 4) {
+                var streetList = "<option value=\"\">街道/乡镇</option>";
+                $("#@(controlId + "_Street")").html(streetList);
+            }
+            if (level >= 2) {
+                $.ajax({
+                    type: "Get",
+                    url: "@Url.Action("LoadChilds", "District", new {area = SystemSettingsModule.Area})" +
+                        "?parentId=" +
+                        $(this).val(),
+                    dataType: "json",
+                    success: function(data) {
+                        var cityList = "<option value=\"\">城市</option>";
+                        $.each(data,
+                            function(i, n) {
+                                cityList += "<option data-fullName=\""+n.FullName+"\" value=\"" + n.Id + "\">" + n.ShortName + "</option>";
+                            });
+                        $("#@(controlId + "_City")").html(cityList);
+                    }
+                });
+            }
+        });
+
+        if (level >= 3) {
+            $("#@(controlId + "_City")").change(function() {
+
+                var districtList = "<option value=\"\">区/县</option>";
+                $("#@(controlId + "_District")").html(districtList);
+
+                var streetList = "<option value=\"\">街道/乡镇</option>";
+                $("#@(controlId + "_Street")").html(streetList);
+
+                $.ajax({
+                    type: "Get",
+                    url: "@Url.Action("LoadChilds", "District", new {area = SystemSettingsModule.Area})" +
+                        "?parentId=" +
+                        $(this).val(),
+                    dataType: "json",
+                    success: function(data) {
+                        var districtList = "<option value=\"\">区/县</option>";
+                        $.each(data,
+                            function(i, n) {
+                                districtList += "<option data-fullName=\""+n.FullName+"\" value=\"" + n.Id + "\">" + n.ShortName + "</option>";
+                            });
+                        $("#@(controlId + "_District")").html(districtList);
+                    }
+                });
+            });
+        }
+
+
+        if (level >= 4) {
+            $("#@(controlId + "_District")").change(function() {
+
+                var streetList = "<option value=\"\">街道/乡镇</option>";
+                $("#@(controlId + "_Street")").html(streetList);
+
+                $.ajax({
+                    type: "Get",
+                    url: "@Url.Action("LoadChilds", "District", new {area = SystemSettingsModule.Area})" +
+                        "?parentId=" +
+                        $(this).val(),
+                    dataType: "json",
+                    success: function(data) {
+                        var streetList = "<option value=\"\">街道/乡镇</option>";
+                        $.each(data,
+                            function(i, n) {
+                                streetList += "<option data-fullName=\""+n.FullName+"\" value=\"" + n.Id + "\">" + n.ShortName + "</option>";
+                            });
+                        $("#@(controlId + "_Street")").html(streetList);
+                    }
+                });
+            });
+        }
+    });
+</script>

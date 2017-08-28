@@ -1,0 +1,120 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Core.SystemSettings.Models
+@using BntWeb.FileSystems.Media
+@using BntWeb.Utility.Extensions
+@{
+    ViewBag.Title = SystemSettingsModule.DisplayName;
+    ViewBag.SubTitle = "编辑版本";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+@model SoftRelease
+<form class="form-horizontal" role="form" id="SoftReleaseForm" action="@Url.Action("EditOnPost", "SoftRelease", new { area = SystemSettingsModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="SoftType"> 软件类型 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <span class="input-icon">
+                    <select class="form-control" id="SoftType" name="SoftType">
+                        <option value="1" @(Model.SoftType == SoftType.Android ? "selected=selected" : "")>@SoftType.Android.Description()</option>
+                        <option value="2" @(Model.SoftType == SoftType.IOS ? "selected=selected" : "")>@SoftType.IOS.Description()</option>
+                    </select>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="SoftName"> 软件名称 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="SoftName" name="SoftName" placeholder="软件名称" class="col-xs-6 col-sm-3" value="@Model.SoftName" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Version"> 软件版本 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Version" name="Version" placeholder="软件版本" class="col-xs-6 col-sm-3" value="@Model.Version" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="ForceUpdating"> 强制更新 </label>
+        <div class="col-sm-9">
+            <input type="checkbox" id="ForceUpdating" name="ForceUpdating" @(Model.ForceUpdating ? "checked=checked" : "") value="True" />
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="DownloadUrl"> 下载地址 </label>
+        <div class="col-sm-9" id="TextPartial">
+            <div class="clearfix" style="height:80px;">
+                <input type="text" style="margin-top:25px;" id="DownloadUrl" name="DownloadUrl" placeholder="下载地址" class="col-xs-6 col-sm-4" value="@Model.DownloadUrl" />
+                @Html.Action("SimpleUploadPartial", "File", new { area = "SystemSettings", acceptedFiles=".apk", maxFilesize=20, controlId = "UploadFile", isPublic = false, moduleKey = SystemSettingsModule.Key, fileType = FileType.Other })
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Description"> 更新备注 </label>
+        <div class="col-sm-9">
+            <textarea id="Description" name="Description" placeholder="填入此次更新内容" style="width: 400px; height:80px;">@Model.Description</textarea>
+        </div>
+    </div>
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        jQuery(function ($) {
+
+            $("#SoftType").on("change", function () {
+                //togglePanel();
+            });
+            //togglePanel();
+
+
+            bntToolkit.initForm($("#SoftReleaseForm"), {
+                Name: {
+                    required: true
+                }
+            }, null, success);
+        });
+
+        function togglePanel() {
+            var softType = $("#SoftType").find("option:selected").val();
+            if (softType === "1") {
+                $("#TextPartial").hide();
+                $("#UploadPartial").show();
+            } else {
+                $("#TextPartial").show();
+                $("#UploadPartial").hide();
+            }
+        }
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "SoftRelease", new {area = SystemSettingsModule.Area })";
+            }
+        }
+
+        function UploadFileCallback(file) {
+            $("#DownloadUrl").val(file.RelativePath);
+        }
+
+    </script>
+}

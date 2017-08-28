@@ -1,0 +1,236 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Core.SystemSettings.ViewModels
+@using BntWeb.Environment
+@using BntWeb.OrderProcess
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@using BntWeb.Wallet
+@using BntWeb.Wallet.Models
+@using Permissions = BntWeb.MemberCenter.Permissions
+@{
+    ViewBag.Title = MemberCenterModule.DisplayName;
+    ViewBag.SubTitle = "会员列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+}
+
+<div class="form-group">
+    <div class="row">
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="UserName"> 用户名 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <input type="text" id="UserName" name="UserName" placeholder="用户名" value="" />
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="NickName"> 昵称 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <input type="text" id="NickName" name="NickName" placeholder="昵称" value=""/>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="PhoneNumber"> 手机号 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <input type="text" id="PhoneNumber" name="PhoneNumber" placeholder="用户名" value="" />
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="InvitationCode"> 邀请码 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <input type="text" id="InvitationCode" name="InvitationCode" placeholder="邀请码" value="@ViewBag.InvitationCode" />
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="Sex"> 性别 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <select id="Sex" name="Sex">
+                        <option value="">所有</option>
+                        <option value="0">未知</option>
+                        <option value="1">男</option>
+                        <option value="2">女</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="CreateTimeBegin"> 注册时间（开始） </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="CreateTimeBegin" name="CreateTimeBegin" class="form-control" />
+                        <span class="input-group-addon">
+                            <i class="icon-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="CreateTimeEnd"> 注册时间（结束） </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="CreateTimeEnd" name="CreateTimeEnd" class="form-control"/>
+                        <span class="input-group-addon">
+                            <i class="icon-calendar"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for="CreateTimeEnd"> 地区 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <div class="input-group input-group-sm">
+                        @Html.Action("DistrictSelectPartial", "District", new {area = "SystemSettings", controlId = "Order", province = "", city = "", district = "", street = "", level = DistrictSelectLevel.City})
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for=""> 消费额 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="BuyMoneyMin" name="BuyMoneyMin" style="width:80px;" />至
+                        <input type="text" id="BuyMoneyMax" name="BuyMoneyMax" style="width:80px;" />元
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-4 control-label no-padding-right" for=""> 积分 </label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="IntegralMin" name="IntegralMin" style="width:80px;" />至
+                        <input type="text" id="IntegralMax" name="IntegralMax" style="width:80px;" />
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-1 col-md-2 col-sm-4 text-center query-form-item">
+            <button class="btn btn-sm btn-info" type="submit" id="QueryButton">
+                <i class="icon-search bigger-110"></i>
+                查询
+            </button>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 text-center query-form-item">
+            <button class="btn btn-sm btn-info" type="submit" id="ExpertButton">
+                <i class="icon-expert bigger-110"></i>
+                导出会员
+            </button>
+        </div>
+    </div>
+</div>
+<hr />
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="MembersTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>用户名</th>
+                        <th>
+                            昵称
+                        </th>
+                        <th>
+                            性别
+                        </th>
+                        <th>
+                            邀请码
+                        </th>
+                        <th>
+                            <i class="icon-phone bigger-110 hidden-480"></i>
+                            手机
+                        </th>
+                        <th>
+                            总消费额
+                        </th>
+                        <th>
+                            订单总数
+                        </th>
+                        <th>
+                            积分
+                        </th>
+                        <th>
+                            <i class="icon-time bigger-110 hidden-480"></i>
+                            注册时间
+                        </th>
+                        <th>状态</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+                <tfoot>
+                    <tr class="red" style="background: #f7bd7e;">
+                        <th colspan="5" style="text-align:right">
+                            本页合计：
+                        </th>
+                        <th id="TotalBuyMoney">
+
+                        </th>
+                        <th id="TotalOrderNumber">
+
+                        </th>
+                        <th id="TotalIntegral">
+
+                        </th>
+                        <th colspan="3">
+                            &nbsp;
+                        </th>
+                    </tr>
+                    <tr>
+                        <td colspan="12" style="text-align: left !important;">
+                            <span style="color: #808080">备注：总消费额=总应付款金额（包含“待发货、待收货、已完成”的订单）</span>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    @Scripts.Render("~/js/admin/jquery-datatable")
+
+    <script type="text/javascript">
+        var canSwitchMember = @authService.TryCheckAccess(Permissions.SwitchMember, user).ToString().ToLower();
+        var canEditMember = @authService.TryCheckAccess(Permissions.EditMember, user).ToString().ToLower();
+        var canDeleteMember = @authService.TryCheckAccess(Permissions.DeleteMember, user).ToString().ToLower();
+
+        var url_loadPage = "@Url.Action("ListOnPage", "Admin", new {area = MemberCenterModule.Area })";
+        var url_editMember = "@Url.Action("Edit", "Admin", new {area = MemberCenterModule.Area })";
+        var url_switchMember = "@Url.Action("Switch", "Admin", new {area = MemberCenterModule.Area })";
+        var url_deleteMember = "@Url.Action("Delete", "Admin", new {area = MemberCenterModule.Area })";
+        var url_cashBill = "@Url.Action("List", "Bill", new {area = WalletModule.Area, walletType = WalletType.Cash, memberId="[memberId]" })";
+        var url_integralBill = "@Url.Action("List", "Bill", new {area = WalletModule.Area, walletType = WalletType.Integral, memberId="[memberId]" })";
+        
+        //TODO：修改订单连接
+        var url_orderList = "@Url.Action("List","Admin", new { area = OrderProcessModule.Area })";
+        
+        var url_billList = "@Url.Action("List","Bill", new { area = WalletModule.Area, walletType = WalletType.Integral })";
+        
+        var url_expert = "@Url.Action("MemberToExecl", "Admin", new { area = MemberCenterModule.Area })";
+
+    </script>
+
+    @Scripts.Render("~/js/admin/members/list")
+}
+

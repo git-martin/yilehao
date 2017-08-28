@@ -1,0 +1,323 @@
+﻿@using BntWeb.Core.SystemSettings.Controllers
+@using BntWeb.FileSystems.Media
+@using BntWeb.Utility.Extensions
+@{
+    var controlId = ViewBag.ControlId;
+    var defaultValue = ViewBag.DefaultValue;
+    var isPublic = ViewBag.IsPublic;
+    var uploadDivId = controlId + "Div";
+    var maxFiles = (int)ViewBag.MaxFiles;
+    var maxFilesize = (int)ViewBag.MaxFilesize;
+    var acceptedFiles = ViewBag.AcceptedFiles;
+    var autoProcessQueue = (bool)ViewBag.AutoProcessQueue;
+    var editMode = (bool)ViewBag.EditMode;
+    var fileType = ViewBag.FileType as FileType?;
+    var waterMark = (bool)ViewBag.WaterMark;
+    var uploadType = (UploadPartialType)ViewBag.UploadType;
+
+    var mediumThumbnailWidth = ViewBag.MediumThumbnailWidth;
+    var mediumThumbnailHeight = ViewBag.MediumThumbnailHeight;
+    var smallThumbnailWidth = ViewBag.SmallThumbnailWidth;
+    var smallThumbnailHeight = ViewBag.SmallThumbnailHeight;
+    var thumbnailType = ViewBag.ThumbnailType;
+
+    var currentFiles = ViewBag.CurrentFiles as List<StorageFile>;
+}
+<style type="text/css">
+    .dropzone { min-height: 120px; }
+        .dropzone .dz-default { width: 150px; height: 120px; margin-left: -100px; }
+    .selectedfiles li { border: 1px solid #ddd; width: 150px; height: 150px; }
+        .selectedfiles li img { width: 150px; height: 150px; }
+</style>
+<div class="row-fluid">
+    <ul class="ace-thumbnails selectedfiles" id="@(controlId)SelectedFiles">
+        @if (currentFiles != null)
+        {
+            foreach (var file in currentFiles)
+            {
+                var fileImage = Url.Content("~/Resources/Common/Images/FileType/" + file.FileType + ".jpg");
+                var fileText = file.FileName;
+
+                var fileTarget = "/" + file.RelativePath;
+                var target = "";
+                var viewButton = "";
+                if (file.FileType == FileType.Image)
+                {
+                    var mSize = file.MediumThumbnail.Substring(file.MediumThumbnail.LastIndexOf("_") + 1, file.MediumThumbnail.LastIndexOf(".") - file.MediumThumbnail.LastIndexOf("_") - 1);
+                    var sSize = file.SmallThumbnail.Substring(file.SmallThumbnail.LastIndexOf("_") + 1, file.SmallThumbnail.LastIndexOf(".") - file.SmallThumbnail.LastIndexOf("_") - 1);
+                    fileText = $"原图：{file.Width}x{file.Height}<br/>中图：{mSize}<br/>小图：{sSize}";
+                    fileImage = "/" + file.SmallThumbnail;
+                    target = "data-rel=colorbox";
+                }
+                else
+                {
+                    target = "target=_blank";
+                }
+                viewButton = "<a href=\"" + fileTarget + "\" " + target + " data-id=\"" + file.Id + "\" ><i class=\"icon-eye-open green\"></i></a>";
+
+                <li>
+                    <a href="@fileTarget" @target>
+                        <img alt="@file.FileName" src="@fileImage" />
+                        <div class="text">
+                            <div class="inner">@MvcHtmlString.Create(fileText)</div>
+                        </div>
+                    </a>
+                    @if (editMode)
+                    {
+                        <div class="tools tools-bottom center">
+                            <a href="#" class="a-move-left" data-id="@file.Id">
+                                <i class="icon-arrow-left blue"></i>
+                            </a>
+                            <a href="#" class="a-remove" data-id="@file.Id">
+                                <i class="icon-remove red"></i>
+                            </a>
+                            @MvcHtmlString.Create(viewButton)
+                            <a href="#" class="a-move-right" data-id="@file.Id">
+                                <i class="icon-arrow-right blue"></i>
+                            </a>
+                        </div>
+                    }
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+@if (editMode)
+{
+    <div class="pull-left" style="width: 150px; height: 150px; margin: 5px;">
+        @if (uploadType != UploadPartialType.JustSelect)
+        {
+            <div id="@uploadDivId" class="dropzone pull-left" style="height: 150px; width: 120px; padding-top: 10px;">
+
+            </div>
+        }
+        @if (!autoProcessQueue)
+        {
+            <button id="@(controlId)UploadButton" type="button" class="btn btn-minier btn-yellow" style="width: 150px; display: none;">立即上传</button>
+        }
+        @if (uploadType != UploadPartialType.JustUpload)
+        {
+            <button id="@(controlId)SelectButton" type="button" class="btn btn-minier btn-yellow" style="width: 150px; margin-top: 8px;">资源库中选择</button>
+        }
+    </div>
+    <input type="hidden" id="@controlId" name="@controlId" value="@defaultValue" />
+    @Styles.Render("~/css/admin/files")
+    @Scripts.Render("~/js/admin/files")
+    <script type="text/javascript">
+        Dropzone.autoDiscover = true;
+        var @(controlId + "_SelectedFiles") = @MvcHtmlString.Create((currentFiles == null? "[]" : currentFiles.ToJson()));
+
+        var @(controlId + "_Value") = @MvcHtmlString.Create(BasicExtensions.ToJson((string.IsNullOrWhiteSpace(defaultValue)? new object[0]:defaultValue.Trim().Split(','))));
+
+        if(@((uploadType != UploadPartialType.JustSelect).ToString().ToLower()))
+        var @controlId = new Dropzone("div#@uploadDivId", {
+            url: "@MvcHtmlString.Create(Url.Action("SaveUploadedFile", "File", new {area = SystemSettingsModule.Area, isPublic, mediumThumbnailWidth, mediumThumbnailHeight, smallThumbnailWidth, smallThumbnailHeight, thumbnailType, waterMark }))",
+
+            init: function() {
+                this.on("complete", function(response) {
+                    if (response.status === 'error') return;
+                    var result = JSON.parse(response.xhr.responseText);
+                    if (result.Success) {
+                        this.removeAllFiles();
+
+                        if (@maxFiles == 1) {
+            @(controlId + "_Value") = [result.Data.Id];
+            @(controlId + "_SelectedFiles") = [result.Data];
+                            $("#@(controlId)SelectedFiles").html("");
+        }else{
+            @(controlId + "_Value").push(result.Data.Id);
+            @(controlId + "_SelectedFiles").push(result.Data);
+        }
+
+                        var val = _.join(_.uniq(@(controlId + "_Value")), ',');
+                        $("#@controlId").val(val);
+
+                        appendImageItem($("#@(controlId)SelectedFiles"), result.Data);
+        }
+        });
+                this.on("addedfile", function(file) {
+                    if (@maxFiles != 1) {
+                        if (@(controlId + "_Value").length === @maxFiles) {
+                            this.removeAllFiles();
+                        bntToolkit.error("达到最大上传数量");
+        }
+        }
+                    $("#@(controlId)UploadButton").show();
+        });
+        this.on("error", function(response,error) {
+            bntToolkit.error(error);
+            this.removeAllFiles();
+        });
+        },
+        drop: null,
+            paramName: "file", // The name that will be used to transfer the file
+        maxFilesize: @maxFilesize, // MB
+        maxFiles: 1,//@maxFiles,
+            acceptedFiles: "@acceptedFiles",
+        autoProcessQueue: @autoProcessQueue.ToString().ToLower(),
+        addRemoveLinks: false,
+            dictDefaultMessage: '<i class="upload-icon icon-cloud-upload blue icon-3x"></i><br/><span style="font-size:10px;">本地上传</span>@(fileType== FileType.Image? MvcHtmlString.Create("<br/><span style=\"font-size:10px;color:#999;\">建议尺寸：<span id=\"" + controlId + "Size\">" + mediumThumbnailWidth + " x "+ mediumThumbnailHeight + "</span></span>") : MvcHtmlString.Create(""))',
+        dictResponseError: '文件上传发生错误!',
+        dictRemoveFile: '删除',
+        dictCancelUpload: "取消上传",
+        dictCancelUploadConfirmation: "你确定要取消上传吗?",
+        dictMaxFilesExceeded: "文件数量过多",
+        dictFileTooBig: "文件太大({{filesize}}MiB). 文件最大支持: {{maxFilesize}}MiB.",
+        //change the previewTemplate to use Bootstrap progress bars
+        previewTemplate: "<div class=\"dz-preview dz-file-preview\" style=\"margin:0 10px;padding:0;\">  <div class=\"dz-details\" style=\"margin-bottom:0;\">  <img data-dz-thumbnail />  <div class=\"progress progress-small progress-striped active\"><div class=\"progress-bar progress-bar-success\" data-dz-uploadprogress></div></div></div>  </div>"
+        });
+
+        if(@((uploadType != UploadPartialType.JustSelect).ToString().ToLower()))
+            @(controlId).SetWH = function(mediumThumbnailWidth, mediumThumbnailHeight, smallThumbnailWidth, smallThumbnailHeight) {
+            @(controlId).options.url = @(controlId).options.url.replace(/mediumThumbnailWidth=(\d+)/g, "mediumThumbnailWidth=" + mediumThumbnailWidth)
+                .replace(/mediumThumbnailHeight=(\d+)/g, "mediumThumbnailHeight=" + mediumThumbnailHeight)
+                .replace(/smallThumbnailWidth=(\d+)/g, "smallThumbnailWidth=" + smallThumbnailWidth)
+                .replace(/smallThumbnailHeight=(\d+)/g, "smallThumbnailHeight=" + smallThumbnailHeight);
+            $("#@(controlId)Size").html(mediumThumbnailWidth+" x "+mediumThumbnailHeight);
+        }
+            if (appendImageItem == undefined) {
+                var appendImageItem = function(container, file) {
+                    var fileImage = "/" + file.SmallThumbnail;
+                    var fileText = file.FileName;
+
+                    switch (file.FileType) {
+                        case 0:
+                            {
+                                var mSize = file.MediumThumbnail.substring(file.MediumThumbnail.lastIndexOf ("_") + 1, file.MediumThumbnail.lastIndexOf ("."));
+                                var sSize = file.SmallThumbnail.substring(file.SmallThumbnail.lastIndexOf ("_") + 1, file.SmallThumbnail.lastIndexOf ("."));
+
+                                fileText = "原图："+file.Width+"x"+file.Height+"<br/>中图：" + mSize + "<br/>小图：" + sSize;
+                            }
+                            break;
+                        case 1:
+                            fileImage = "/Resources/Common/Images/FileType/video.jpg";
+                            break;
+                        case 2:
+                            fileImage = "/Resources/Common/Images/FileType/zip.jpg";
+                            break;
+                        case 3:
+                            fileImage = "/Resources/Common/Images/FileType/pdf.jpg";
+                            break;
+                        default:
+                            fileImage = "/Resources/Common/Images/FileType/other.jpg";
+                            break;
+                    }
+
+                    var fileTarget = "#";
+                    var target = 'target="_blank"';
+                    var viewButton = "";
+                    if (file.FileType === 0) {
+                        fileTarget = "/" + file.RelativePath;
+                        target = 'data-rel="colorbox"';
+                        viewButton = '<a href="' + fileTarget + '" ' + target + ' data-id="' + file.Id + '"><i class="icon-eye-open green"></i></a>';
+                    }
+
+                    container.append('<li><a href="' + fileTarget + '" ' + target + '><img alt="' + file.FileName + '" src="' + fileImage + '" /><div class="text"><div class="inner">' + fileText + '</div></div></a><div class="tools tools-bottom center"><a href="#" class="a-move-left" data-id="' + file.Id + '"><i class="icon-arrow-left blue"></i></a><a href="#" class="a-remove" data-id="' + file.Id + '"><i class="icon-remove red"></i></a>' + viewButton + '<a href="#" class="a-move-right" data-id="' + file.Id + '"><i class="icon-arrow-right blue"></i></a></div></li>');
+                }
+            }
+
+        jQuery(function($) {
+            $(".dropzone").css({ "width": "150px", "height": "120px", "min-height": "120px" });
+            $(".dz-message").css({ "width": "150px", "height": "120px", "margin-left": "-75px", "margin-top": "-60px", "line-height": "12px" });
+            $("#@(controlId)UploadButton").on("click", function() {
+                @(controlId).processQueue();
+            });
+
+            $("#@(controlId)SelectButton").on("click", function() {
+                bntToolkit.selectFiles(@maxFiles,@(fileType == null ? -1 : (int)fileType) ,@(controlId + "_SelectedFiles"), function(selectedFiles) {
+                    //console.log(JSON.stringify(selectedFiles));
+                    @(controlId + "_SelectedFiles") = selectedFiles;
+
+                    $("#@(controlId)SelectedFiles").html("");
+                    @(controlId + "_Value") = [];
+                    for (var i = 0; i < selectedFiles.length; i++) {
+                        var selectedFile = selectedFiles[i];
+                        appendImageItem($("#@(controlId)SelectedFiles"), selectedFile);
+                        @(controlId + "_Value").push(selectedFile.Id);
+                    }
+
+                    var val = _.join(_.uniq(@(controlId + "_Value")), ',');
+                    $("#@controlId").val(val);
+                });
+            });
+            $("#@(controlId)SelectedFiles").on("click", ".a-remove", function() {
+                var id = $(this).data("id");
+                _.remove(@(controlId + "_Value"), function(n) {
+                    return n == id;
+                });
+                _.remove(@(controlId + "_SelectedFiles"), function(n) {
+                    return n.Id == id;
+                });
+
+                var val = _.join(_.uniq(@(controlId + "_Value")), ',');
+                $("#@controlId").val(val);
+
+                $(this).parent().parent().remove();
+            });
+
+            $("#@(controlId)SelectedFiles").on("click", ".a-move-left", function() {
+
+                var tempImage = $(this).parent().parent();
+                var prevImages = $(this).parent().parent().prev();
+                if (prevImages.length == 0) return;
+                var prevImage = prevImages[0];
+                tempImage.remove();
+                tempImage.insertBefore(prevImage);
+
+                var id = $(this).data("id");
+                var idIndex = _.indexOf(@(controlId + "_Value"), id);
+                var prevArr = _.slice(@(controlId + "_Value"), 0, idIndex - 1);
+                var nextArr = _.slice(@(controlId + "_Value"), idIndex - 1, @(controlId + "_Value").length);
+                prevArr.push(id);
+                _.remove(nextArr, function(n) {
+                    return n == id;
+                });
+                @(controlId + "_Value") = _.concat(prevArr, nextArr);
+                var val = _.join(_.uniq(@(controlId + "_Value")), ',');
+                $("#@controlId").val(val);
+            });
+
+            $("#@(controlId)SelectedFiles").on("click", ".a-move-right", function() {
+
+                var tempImage = $(this).parent().parent();
+                var nextImages = $(this).parent().parent().next();
+                if (nextImages.length == 0) return;
+                var nextImage = nextImages[0];
+                tempImage.remove();
+                tempImage.insertAfter(nextImage);
+
+                var id = $(this).data("id");
+                var idIndex = _.indexOf(@(controlId + "_Value"), id);
+                var prevArr = _.slice(@(controlId + "_Value"), 0, idIndex + 2);
+                var nextArr = _.slice(@(controlId + "_Value"), idIndex + 1, @(controlId + "_Value").length);
+                _.remove(prevArr, function(n) {
+                    return n == id;
+                });
+                prevArr.push(id);
+                @(controlId + "_Value") = _.concat(prevArr, nextArr);
+                var val = _.join(_.uniq(@(controlId + "_Value")), ',');
+                $("#@controlId").val(val);
+            });
+
+        });
+    </script>
+}
+
+<script type="text/javascript">
+    jQuery(function($) {
+        $('#@(controlId)SelectedFiles').on('click','[data-rel="colorbox"]',function(){
+            $.colorbox({href:$(this).attr('href'), open:true,  maxWidth:'100%', maxHeight:'100%',close:'X',
+                onOpen:function(){
+                    document.body.style.overflow = 'hidden';
+                },
+                onClosed:function(){
+                    document.body.style.overflow = 'auto';
+                },
+                onComplete:function(){
+                    $.colorbox.resize();
+                }});
+            return false;
+        });
+    });
+</script>

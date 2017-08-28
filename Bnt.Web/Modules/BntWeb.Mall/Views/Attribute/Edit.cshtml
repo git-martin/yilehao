@@ -1,0 +1,126 @@
+﻿@using System.Web.Optimization
+@using BntWeb.FileSystems.Media
+@using BntWeb.Mall.Models
+@{
+    ViewBag.Title = MallModule.DisplayName;
+    ViewBag.SubTitle = "编辑属性";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    var goodsTypes = ViewBag.GoodsTypes as List<GoodsType>;
+
+}
+@model BntWeb.Mall.Models.GoodsAttribute
+<form class="form-horizontal" role="form" id="AttributeForm" action="@Url.Action("EditOnPost", "Attribute", new { area = MallModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Name"> 属性名称 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+        <input type="hidden" id="AttributeType" name="AttributeType" value="@Model.AttributeType" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Name" name="Name" placeholder="属性名称" class="col-xs-6 col-sm-3" value="@Model.Name" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="GoodsTypeId"> 所属类型 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <span class="input-icon">
+                    <select class="form-control" id="GoodsTypeId" name="GoodsTypeId">
+                        @if (goodsTypes != null)
+                        {
+                            foreach (var goodsType in goodsTypes)
+                            {
+                                <option value="@goodsType.Id" @(goodsType.Id.Equals(Model.GoodsTypeId) ? "selected=selected" : "")>@goodsType.Name</option>
+                            }
+                        }
+                    </select>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div class="space-4 hidden"></div>
+    <div class="form-group hidden">
+        <label class="col-sm-1 control-label no-padding-right" for="InputType"> 录入方式 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <div class="radio pull-left">
+                    <label>
+                        <input name="InputType" type="radio" class="ace" value="0" @(Model.InputType == BntWeb.Mall.Models.InputType.Manual ? "checked=checked" : "")>
+                        <span class="lbl">手工输入</span>
+                    </label>
+                </div>
+                <div class="radio pull-left">
+                    <label>
+                        <input name="InputType" type="radio" class="ace" value="1" @(Model.InputType == BntWeb.Mall.Models.InputType.Select ? "checked=checked" : "")>
+                        <span class="lbl">选择输入</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div id="ValuesGroup" class="form-group" @(Model.InputType == BntWeb.Mall.Models.InputType.Manual ? "style=display:none" : "")>
+        <label class="col-sm-1 control-label no-padding-right">可选值</label>
+        <div class="col-sm-9">
+            <input type="text" name="Values" id="Values" value="@Model.Values" placeholder="输入后回车..." style="display: none;">
+        </div>
+    </div>
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        jQuery(function ($) {
+            bntToolkit.initForm($("#AttributeForm"), {
+                Name: {
+                    required: true,
+                    maxlength: 60
+                }
+            }, null, success);
+
+            var tag_input = $('#Values');
+            if (!(/msie\s*(8|7|6)/.test(navigator.userAgent.toLowerCase()))) {
+                tag_input.tag(
+                  {
+                      placeholder: tag_input.attr('placeholder'),
+                      //enable typeahead by specifying the source array
+                      source: ace.variable_US_STATES,//defined in ace.js >> ace.enable_search_ahead
+                  }
+                );
+            }
+            else {
+                //display a textarea for old IE, because it doesn't support this plugin or another one I tried!
+                tag_input.after('<textarea id="' + tag_input.attr('id') + '" name="' + tag_input.attr('name') + '" rows="3">' + tag_input.val() + '</textarea>').remove();
+                //$('#form-field-tags').autosize({append: "\n"});
+            }
+
+            $("input[name='InputType']").on("click", function () {
+                if ($(this).val() === "1") {
+                    $("#ValuesGroup").show();
+                } else {
+                    $("#ValuesGroup").hide();
+                }
+            });
+
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "Attribute", new {area = MallModule.Area, typeId = Model.GoodsTypeId })";
+            }
+        }
+
+    </script>
+}

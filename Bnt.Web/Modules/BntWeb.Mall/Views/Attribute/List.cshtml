@@ -1,0 +1,61 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = MallModule.DisplayName;
+    ViewBag.SubTitle = "商品类型";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+    var typeId = ViewBag.TypeId;
+}
+
+@section HeaderRight {
+    @if (authService.TryCheckAccess(Permissions.ManageGoodsType, user))
+    {
+        <a class="btn btn-info" id="AddButton" href="#" data-href="@Url.Action("Edit", "Attribute", new {area = MallModule.Area, typeId})">
+            <i class="icon-plus bigger-110"></i>
+            添加
+        </a>
+    }
+}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="AttributesTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th>属性名称</th>
+                        <th>
+                            录入方式
+                        </th>
+                        <th>
+                            可选值
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+
+    @Scripts.Render("~/js/admin/jquery-datatable")
+
+    <script type="text/javascript">
+        var url_loadPage = "@Url.Action("ListOnPage", "Attribute", new {area = MallModule.Area, typeId})";
+        var url_editAttribute = "@Url.Action("Edit", "Attribute", new {area = MallModule.Area})";
+        var url_deleteAttribute = "@Url.Action("Delete", "Attribute", new {area = MallModule.Area})";
+    </script>
+
+    @Scripts.Render("~/js/admin/mall/attribute/list")
+
+}
+

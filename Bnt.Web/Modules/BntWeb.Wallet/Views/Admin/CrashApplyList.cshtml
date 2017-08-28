@@ -1,0 +1,120 @@
+﻿@using System.Web.Optimization
+@using Autofac
+@using BntWeb.Wallet.Models
+@using BntWeb.Environment
+@using BntWeb.Security
+@using BntWeb.Security.Identity
+@{
+    ViewBag.Title = WalletModule.DisplayName;
+    ViewBag.SubTitle = "提现申请列表";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var user = ViewBag.CurrentUser as User;
+    var authService = HostConstObject.Container.Resolve<IAuthorizationService>();
+    var canTransfer = @authService.TryCheckAccess("BntWeb-PaymentProcess-Transfer", user);
+}
+<style>
+    .dataTable th.sorting_disabled { color: #707070; }
+</style>
+@section HeaderRight {
+}
+<div class="form-group">
+    <div class="row">
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-3 control-label no-padding-right" for="ApplyStateType">申请状态</label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <select id="ApplyStateType" name="ApplyStateType">
+                        <option value="">所有</option>
+                        <option value="0">申请中</option>
+                        <option value="1">申请通过</option>
+                        <option value="2">打款中</option>
+                        <option value="3">已打款</option>
+                        <option value="4">提现失败</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-4 col-lg-3 query-form-item">
+            <label class="col-sm-4 col-md-3 control-label no-padding-right" for="PaymentType">提现类型</label>
+            <div class="col-sm-8 col-md-8">
+                <div class="clearfix">
+                    <select id="PaymentType" name="PaymentType">
+                        <option value="">所有</option>
+                        @*<option value="1">支付宝</option>*@
+                        <option value="2">微信</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-1 col-md-2 col-sm-3 text-center query-form-item">
+            <button class="btn btn-sm btn-info" type="submit" id="QueryButton">
+                <i class="icon-search bigger-110"></i>
+                查询
+            </button>
+        </div>
+        @if (canTransfer)
+        {
+            <form id="TransferForm" action="@Url.Action("Transfer", "Admin", new {area = "PaymentProcess"})" target="_blank" method="post">
+                <input type="hidden" id="PaymentCode" name="PaymentCode" value="alipay" />
+                @*<div class="col-lg-1 col-md-2 col-sm-3 text-center query-form-item">
+                    <button class="btn btn-sm btn-info" type="button" id="AlipayTransferButton">
+                        <i class="icon-exchange bigger-110"></i>
+                        支付宝转账
+                    </button>
+                </div>*@
+                <div class="col-lg-1 col-md-2 col-sm-3 text-center query-form-item">
+                    <button class="btn btn-sm btn-success" type="button" id="WeiXinTransferButton">
+                        <i class="icon-exchange bigger-110"></i>
+                        微信转账
+                    </button>
+                </div>
+                <div class="col-lg-1 col-md-2 col-sm-3 text-center query-form-item">
+                    <button class="btn btn-sm btn-warning" type="button" id="OffLineTransferButton">
+                        <i class="icon-exchange bigger-110"></i>
+                        已线下转账
+                    </button>
+                </div>
+            </form>
+        }
+    </div>
+</div>
+<hr />
+<div class="row">
+    <div class="col-xs-12">
+        <div class="table-responsive">
+            <table id="crashapplyTable" class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>流水号</th>
+                        <th>账号名称</th>
+                        <th>申请账号</th>
+                        <th>提现类型</th>
+                        <th>提现金额</th>
+                        <th>申请时间</th>
+                        <th>申请状态</th>
+                        <th>审核时间</th>
+                        <th>打款时间</th>
+                        <th>描述</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-datatable")
+    <script type="text/javascript">
+        var canViewWallet =@authService.TryCheckAccess(Permissions.ViewWallet, user).ToString().ToLower();
+        var canProcesseWallet =@authService.TryCheckAccess(Permissions.ProcesseWallet, user).ToString().ToLower();
+        var canTransfer =@canTransfer.ToString().ToLower();
+
+        var url_loadPage = "@Url.Action("ListOnPage", "Admin", new {area = WalletModule.Area})";
+        var url_auditApply = "@Url.Action("AuditApply", "Admin", new {area = WalletModule.Area })";
+        var url_transfer = "@Url.Action("Transfer", "Admin", new {area = "PaymentProcess"})";
+
+    </script>
+    @Scripts.Render("~/js/admin/Wallet/list")
+}

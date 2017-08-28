@@ -1,0 +1,36 @@
+﻿.pro-list-show {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pro-s-box {
+    padding: 10px 10px 10px 65px;
+    position: relative;
+    min-height: 55px;
+}
+
+.pro-s-img {
+    width: 55px;
+    height: 55px;
+    overflow: hidden;
+    position: absolute;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+    .pro-s-img img {
+        display: block;
+        border: 0;
+        width: 55px;
+    }
+
+.pro-s-name {
+    line-height: 20px;
+}
+
+.pro-s-gg {
+    line-height: 20px;
+    color: #666666;
+}

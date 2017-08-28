@@ -1,0 +1,164 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Core.SystemSettings.Models
+@using BntWeb.Logistics.Models
+@using BntWeb.Logistics.ViewModels
+@{
+    ViewBag.Title = LogisticsModule.DisplayName;
+    ViewBag.SubTitle = "配送区域";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    //var editMode = (bool)ViewBag.EditMode;
+    var isNew = (bool)ViewBag.IsNew;
+    if (isNew)
+    {
+        ViewBag.SubTitle = "新增配送区域";
+    }
+    else
+    {
+        ViewBag.SubTitle = "编辑配送区域";
+    }
+    var drovinceList = ViewBag.DrovinceList as List<DistrictWithChilViewModel>;
+    var cityList = ViewBag.CityList as List<District>;
+    var areaList = ViewBag.AreaList as List<District>;
+    var feeList = ViewBag.FeeList as List<ShippingAreaFee>;
+    var areaCodeList = ViewBag.CodeList as string[];
+}
+@model BntWeb.Logistics.Models.ShippingArea
+@Styles.Render("~/js/admin/logistics/style")
+
+
+@Scripts.Render("~/Modules/BntWeb.Logistics/Content/Scripts/area")
+
+
+<form class="form-horizontal" role="form" method="POST" id="ShippingAreaForm" action="@Url.Action("EditOnPost", "ShippingArea", new { area = LogisticsModule.Area })">
+    <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+    <input type="hidden" id="IsDefualt" name="Isdefualt" value="@Model.IsDefualt" />
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Name"> 设置区域 </label>
+        <div class="col-sm-9">
+            <div class="addrbox">
+                <div class="content f-cb">
+                    <div class="btnck">
+                        <label for="allcheck"><input type="checkbox" class="allcheck" id="allcheck">全选</label>
+                    </div>
+                    <div class="list">
+                        <ul>
+                            @{
+                                if (drovinceList != null)
+                                {
+                                    if (areaCodeList != null)
+                                    {
+                                        foreach (var info in drovinceList)
+                                        {
+                                            <li>
+                                                <input type="checkbox" name="AreaId" value="@info.Id" @(areaCodeList.Contains(info.Id) ? "checked" : "" ) class="listcheck">
+                                                <div class="box f-cb">
+                                                    @if (info.DistrictChil != null)
+                                                    {
+                                                        foreach (var item in info.DistrictChil)
+                                                        {
+                                                            <div class="fl">
+                                                                <label for="@item.Id"><input type="checkbox" class="childcheck" name="AreaId" value="@item.Id" id="@item.Id" @(areaCodeList.Contains(item.Id) ? "checked" : "" )>@item.ShortName</label>
+                                                            </div>
+                                                        }
+                                                    }
+                                                    <a href="javascript:;" class="closebox">关闭</a>
+                                                </div>
+                                                <span>@info.ShortName</span>
+                                            </li>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        foreach (var info in drovinceList)
+                                        {
+                                            <li>
+                                                <input type="checkbox" name="AreaId" value="@info.Id" class="listcheck">
+                                                <div class="box f-cb">
+                                                    @if (info.DistrictChil != null)
+                                                    {
+                                                        foreach (var item in info.DistrictChil)
+                                                        {
+                                                            <div class="fl">
+                                                                <label for="@item.Id"><input type="checkbox" name="AreaId" value="@item.Id" class="childcheck" id="@item.Id">@item.ShortName</label>
+                                                            </div>
+                                                        }
+                                                    }
+                                                    <a href="javascript:;" class="closebox">关闭</a>
+                                                </div>
+                                                <span>@info.ShortName</span>
+                                            </li>
+                                        }
+                                    }
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Name"> 配送区域名字 </label>
+        <div class="col-sm-3">
+            <div class="clearfix">
+                <input type="text" id="Name" name="Name" maxlength="200" class="col-xs-10 col-sm-5" value="@Model.Name" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Weight"> 首重（千克） </label>
+        <div class="col-sm-3">
+            <div class="clearfix">
+                <input type="text" id="Weight" name="Weight" maxlength="200" class="col-xs-10 col-sm-5" value="@Model.Weight" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Freight"> 首费用（元） </label>
+        <div class="col-sm-3">
+            <div class="clearfix">
+                <input type="text" id="Freight" name="Freight" maxlength="200" class="col-xs-10 col-sm-5" value="@Model.Freight" />
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="SFreight"> 续费（元） </label>
+        <div class="col-sm-3">
+            <div class="clearfix">
+                <input type="text" id="SFreight" name="SFreight" maxlength="200" class="col-xs-10 col-sm-5" value="@Model.SFreight" />
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Sort"> 排序 </label>
+        <div class="col-sm-3">
+            <div class="clearfix">
+                <input type="text" id="Sort" name="Sort" maxlength="200" class="col-xs-10 col-sm-5" value="@Model.Sort" />
+            </div>
+        </div>
+    </div>
+
+    <div class="clearfix form-actions">
+        <div class="col-md-offset-3 col-md-9">
+            <button class="btn btn-info" type="submit">
+                <i class="icon-ok bigger-110"></i>
+                保存
+            </button>
+        </div>
+    </div>
+
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    <script type="text/javascript">
+        var url_loadPage = "@Url.Action("List", "ShippingArea", new {area = LogisticsModule.Area})";
+        var url_loadDistrict = "@Url.Action("LoadDistrictByParentId", "ShippingArea", new {area = LogisticsModule.Area})";
+    </script>
+    @Scripts.Render("~/js/admin/logistics/shippingarea/edit")
+}

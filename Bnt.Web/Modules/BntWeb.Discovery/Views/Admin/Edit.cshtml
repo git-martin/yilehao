@@ -1,0 +1,152 @@
+﻿@using System.Web.Optimization
+@using BntWeb.Discovery.Models
+@using BntWeb.FileSystems.Media
+@{
+    ViewBag.Title = DiscoveryModule.DisplayName;
+    ViewBag.SubTitle = "发布文章";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    ViewBag.SubTitle = "编辑发现";
+
+    var relationGoods = ViewBag.RelationGoods as List<DiscoveryGoodsRelation>;
+
+}
+@model Discovery
+<form class="form-horizontal" role="form" method="POST" id="DiscoveryForm" action="@Url.Action("EditOnPost", "Admin", new { area = DiscoveryModule.Area })">
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Title"> 标题 </label>
+        <input type="hidden" id="Id" name="Id" value="@Model.Id" />
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Title" name="Title" placeholder="标题" class="col-xs-10 col-sm-5" value="@Model.Title" />
+            </div>
+        </div>
+    </div>
+
+    @*<div class="space-4"></div>
+        <div class="form-group">
+            <label class="col-sm-1 control-label no-padding-right" for="Source"> 来源 </label>
+            <div class="col-sm-9">
+                <div class="clearfix">
+                    <input type="text" id="Source" name="Source" placeholder="来源" class="col-xs-10 col-sm-5" value="@Model.Source"/>
+                </div>
+            </div>
+        </div>
+        <div class="space-4"></div>
+        <div class="form-group">
+            <label class="col-sm-1 control-label no-padding-right" for="Author"> 作者 </label>
+            <div class="col-sm-9">
+                <div class="clearfix">
+                    <input type="text" id="Author" name="Author" placeholder="作者" class="col-xs-10 col-sm-5" value="@Model.Author" />
+                </div>
+            </div>
+        </div>*@
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Blurb"> 简介 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <input type="text" id="Blurb" name="Blurb" placeholder="简介" class="col-xs-10 col-sm-5" value="@Model.Blurb" />
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for=""> 关联商品 </label>
+        <div class="col-sm-9">
+            <div class="row-fluid"><button class="btn btn-sm" type="button" id="selGoods">选择商品</button></div>
+            <div class="col-sm-10" id="GoodsBox">
+                @if (relationGoods != null)
+                {
+                    foreach (var goods in relationGoods)
+                    {
+                        <label><input name="Goods" type="checkbox" class="ace " value="@goods.GoodsId" checked="checked" onclick="$(this).parent().remove();"><span class="lbl"> @goods.Goods.Name</span></label>
+                    }
+
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right"> 主图</label>
+        <div class="col-sm-8 image">
+            <div class="col-sm-10">
+                @Html.Action("UploadPartial", "File", new { area = "SystemSettings", sourceId = Model.Id, moduleKey = DiscoveryModule.Key, sourceType = "DiscoveryImages", controlId = "DiscoveryImages", fileType = FileType.Image, maxFiles = 3, isPublic = false, mediumThumbnailHeight = 200, mediumThumbnailWidth = 200, smallThumbnailWidth = 100, smallThumbnailHeight = 100 })
+            </div>
+        </div>
+    </div>
+    <div class="space-4"></div>
+    <div class="form-group">
+        <label class="col-sm-1 control-label no-padding-right" for="Content"> 内容 </label>
+        <div class="col-sm-9">
+            <div class="clearfix">
+                <textarea id="Content" name="Content" placeholder="请填写内容详情" style="height: 400px; width: 100%" class="col-xs-10 col-sm-12">@Model.Content</textarea>
+            </div>
+        </div>
+    </div>
+    @{
+        <div class="clearfix form-actions">
+            <div class="col-md-offset-3 col-md-9">
+                <button class="btn btn-info" type="submit" onclick="setText()">
+                    <i class="icon-ok bigger-110"></i>
+                    保存
+                </button>
+                &nbsp; &nbsp; &nbsp;
+                <button class="btn" type="reset">
+                    <i class="icon-undo bigger-110"></i>
+                    重置
+                </button>
+            </div>
+        </div>
+    }
+</form>
+@section Scripts {
+    @Scripts.Render("~/js/admin/jquery-form")
+    @Scripts.Render("~/js/kindeditor")
+    <script type="text/javascript">
+        var url_deleteRelation = "@Url.Action("Delete", "admin", new {area = DiscoveryModule.Area})";
+
+        var url_search = "@Url.Action("GetGoods", "Admin", new {area = DiscoveryModule.Area})";
+
+        KindEditor.ready(function (K) {
+            K.create('#Content', {
+                afterBlur: function () { this.sync(); }
+            });
+        });
+
+
+        jQuery(function ($) {
+
+            bntToolkit.initForm($("#DiscoveryForm"), {
+                Title: {
+                    required: true,
+                    maxlength: 50
+                },
+                Blurb: {
+                    required: true,
+                    maxlength: 250
+                },
+                DiscoveryImages: {
+                    required: true
+                }
+
+            }, null, success);
+        });
+
+        // post-submit callback
+        function success(result, statusText, xhr, $form) {
+            if (!result.Success) {
+                bntToolkit.error(result.ErrorMessage);
+            } else {
+                location.href = "@Url.Action("List", "Admin", new {area = DiscoveryModule.Area})";
+            }
+        }
+
+    </script>
+
+
+    @Scripts.Render("~/js/admin/discovery/edit")
+}
