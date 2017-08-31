@@ -12,6 +12,24 @@ namespace AutoSendOrders
             public string EmailAccount { get; set; }
             public string EmailPassword { get; set; }
             public string MailNickName { get; set; }
+
+            public int Port { get { return 25; } }
+            public string Host { get { return "smtp.exmail.qq.com"; } }
+            public bool EnableSsl { get { return false; } }
+        }
+
+        public class QQMailSmtpInfo
+        {
+            public string EmailAccount { get; set; }
+            public string EmailPassword { get; set; }
+            public string Title { get; set; }
+
+            public int Port { get { return EnableSsl?465:587; } }
+
+            public string MailNickName { get { return "yilehao"; } }
+            public string Host { get { return "smtp.qq.com"; } }
+
+            public bool EnableSsl { get { return true; } }
         }
 
         public class MonitorStatus
@@ -58,6 +76,31 @@ namespace AutoSendOrders
                     EmailAccount = infos[0],
                     EmailPassword = infos[1],
                     MailNickName = infos[2],
+                };
+                return ret;
+            }
+        }
+
+
+        public static QQMailSmtpInfo QqMailSmtpInfo
+        {
+            get
+            {
+                var value = ConfigurationManager.AppSettings["QQMailSmtpInfo"].ToString();
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new Exception("QQMailSmtpInfo未配置或者配置不正确");
+                }
+                var infos = value.Split(':');
+                if (infos == null || infos.Length != 3)
+                {
+                    throw new Exception("QQMailSmtpInfo格式配置不正确");
+                }
+                var ret = new QQMailSmtpInfo
+                {
+                    EmailAccount = infos[0],
+                    EmailPassword = infos[1],
+                    Title = infos[2],
                 };
                 return ret;
             }

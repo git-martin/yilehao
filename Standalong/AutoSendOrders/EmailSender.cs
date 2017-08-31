@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,6 @@ using System.Net;
 using System.Net.Mail;
 using System.Text;
 using AutoSendOrders.Models;
-using NPOI.HSSF.UserModel;
 using NPOI.SS.UserModel;
 
 namespace AutoSendOrders
@@ -16,50 +14,38 @@ namespace AutoSendOrders
     public class EmailSender
     {
 
-        public static void SendEmail()
+        public static void SendEmail(List<Order> list)
         {
-            const string serviceName = "test";
-            var smtp = MyConfig.SmtpInfoConfig;
+            var smtp = MyConfig.QqMailSmtpInfo;
             var msg = new MailMessage();
             msg.To.Add(MyConfig.ToEmails);//收件人地址  
             msg.From = new MailAddress(smtp.EmailAccount, smtp.MailNickName);//发件人邮箱，名称
             msg.Subject = string.Format("警告:检查到服务<{0}>未运行！", "");//邮件标题  
             msg.SubjectEncoding = Encoding.UTF8;//标题格式为UTF8  
-            var sb = new StringBuilder();
-            sb.Append("<div style='color:#0000ff;'>");
-            sb.AppendFormat(@"
-                    <h3>监控人员请注意，发现服务【{0}】未正常运行：</h3>
-                    <ul style='border-left: 10px solid #ccc;color:#0000ff;'>
-                        <li>检查时间：{1}</li>
-                    </ul>", serviceName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            sb.Append(@"<div style='border-top:1px dotted #ccc; color: #0000ff;font-size: 12px;'>
-	注：<br> - 在发现服务未运行时即发送次邮件，并根据配置会尝试启动服务;<br> - CPU,内存等信息都是瞬时状态（不代表常态），仅供参考；<br> - StartPending状态代表服务由监控程序启动中，如果后续未收到监控邮件说明启动成功；
-	</div>");
-            sb.Append("<div>");
+           
             msg.BodyEncoding = Encoding.UTF8;//内容格式为UTF8  
             msg.IsBodyHtml = true;
-            msg.Body = sb.ToString();
+            msg.Body = BuildEmailBody(list);
             var client = new SmtpClient
             {
-                Host = "smtp.exmail.qq.com",
+                Host = smtp.Host,
                 //QQ 企业邮箱不支持用SSL
                 //Port = 465,
                 //EnableSsl = true,
-                Port = 25,
-                EnableSsl = false,
+                Port = 465,
+                EnableSsl = true,
                 Timeout = 120 * 1000,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
+                UseDefaultCredentials = true,
                 Credentials = new NetworkCredential(smtp.EmailAccount, smtp.EmailPassword),
             };
-            var list = GetTodayOrders(DateTime.Now, DateTime.Now);
 
             //创建Excel文件的对象  
             var book = new NPOI.HSSF.UserModel.HSSFWorkbook();
 
             //添加一个sheet  
-            NPOI.SS.UserModel.ISheet sheet1 = book.CreateSheet("Sheet1");
-            if (list.Any())
+            ISheet sheet1 = book.CreateSheet("Sheet1");
+            if (list != null && list.Any())
             {
                 //给sheet1添加第一行的头部标题  
                 NPOI.SS.UserModel.IRow row1 = sheet1.CreateRow(0);
@@ -100,7 +86,7 @@ namespace AutoSendOrders
                         }
 
                     }
-                    NPOI.SS.UserModel.IRow rowtemp = sheet1.CreateRow(i + 1);
+                    IRow rowtemp = sheet1.CreateRow(i + 1);
                     rowtemp.CreateCell(0).SetCellValue(item.OrderNo);
                     rowtemp.CreateCell(1).SetCellValue(n);
                     rowtemp.CreateCell(2).SetCellValue(m);
@@ -127,26 +113,48 @@ namespace AutoSendOrders
                     rowtemp.CreateCell(12).SetCellValue(statusName);
                     i++;
                 }
-            }
-            // 写入到客户端   
-            var ms = new MemoryStream();
-            book.Write(ms);
-            ms.Seek(0, SeekOrigin.Begin);
-            var dt = DateTime.Now;
-            var dateTime = dt.ToString("yyMMddHHmmssfff");
-            var fileName = "订单列表" + dateTime + ".xls";
 
-            msg.Attachments.Add(new Attachment(ms,fileName));
+                // 写入到客户端   
+                var ms = new MemoryStream();
+                book.Write(ms);
+                ms.Seek(0, SeekOrigin.Begin);
+                var dt = DateTime.Now;
+                var dateTime = dt.ToString("yyMMddHHmmssfff");
+                var fileName = "订单列表" + dateTime + ".xls";
+
+                msg.Attachments.Add(new Attachment(ms, fileName));
+            }
+           
 
             msg.DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure;
             client.Send(msg);//发送邮件  
+        }
+
+        private static string BuildEmailBody(List<Order> list)
+        {
+            var sb = new StringBuilder();
+            sb.Append("<div style='color:#0000ff;'>");
+            sb.AppendFormat(@"
+                    <h3>监控人员请注意，发现服务【{0}】未正常运行：</h3>
+                    <ul style='border-left: 10px solid #ccc;color:#0000ff;'>
+                        <li>检查时间：{1}</li>
+                    </ul>", "marting", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            sb.Append(@"<div style='border-top:1px dotted #ccc; color: #0000ff;font-size: 12px;'>
+	注：<br> - 在发现服务未运行时即发送次邮件，并根据配置会尝试启动服务;<br> - CPU,内存等信息都是瞬时状态（不代表常态），仅供参考；<br> - StartPending状态代表服务由监控程序启动中，如果后续未收到监控邮件说明启动成功；
+	</div>");
+            sb.Append("<div>");
+            return sb.ToString();
         }
 
         public static List<Order> GetTodayOrders(DateTime start, DateTime end)
         {
             using (var dbContex = new OrderDbContext())
             {
-                var query = dbContex.Orders.Include(s => s.OrderGoods).AsNoTracking().Where(o => o.PayStatus == PayStatus.Paid && o.ShippingStatus == ShippingStatus.Shipped);
+                var query = dbContex.Orders.Include(s => s.OrderGoods).AsNoTracking()
+                    .Where(o => o.PayStatus == PayStatus.Paid 
+                        && o.ShippingStatus == ShippingStatus.Shipped
+                        && o.PayTime>start
+                        && o.PayTime<=end);
                 var data = query.ToList();
                 return data;
             }

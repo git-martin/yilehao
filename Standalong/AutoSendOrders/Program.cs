@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
 using AutoSendOrders.Models;
@@ -12,7 +13,7 @@ namespace AutoSendOrders
         private static System.Timers.Timer _timer;
         static void Main(string[] args)
         {
-            Console.WriteLine("======SellerPro Service Status Monitor Programe======");
+            Console.WriteLine("======Auto Sender Order Monitor======");
             try
             {
                 _timer = new System.Timers.Timer();
@@ -42,11 +43,31 @@ namespace AutoSendOrders
         }
         static void timer_Elapsed(object sender, ElapsedEventArgs e)
         {
+            var checkPoint = DateTime.Now.Date.AddHours(20).AddMinutes(38);
             try
             {
-                
-                EmailSender.SendEmail();
-                Console.WriteLine("sender");
+                var now = DateTime.Now;
+                var span = (now - checkPoint).TotalSeconds;
+                if (0< span && span < MyConfig.OrderCheckTimeSpan)
+                {
+                    var start = checkPoint.AddDays(-1);
+                    var data = EmailSender.GetTodayOrders(start, checkPoint);
+                    if (data == null || !data.Any())
+                    {
+                        Console.WriteLine(">> {0} no order found.", now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    }
+                    else
+                    {
+                        Console.WriteLine(">> {0} order count {1}.", now.ToString("yyyy-MM-dd HH:mm:ss"), data.Count);
+                    }
+                    EmailSender.SendEmail(data);
+                    Console.WriteLine(">> email sent.");
+                }
+                else if(now.Minute%10==8)
+                {
+                    Console.WriteLine(" {0} - Moniting...", now.ToString("yyyy-MM-dd hh:MM:ss"));
+                }
+               
             }
             catch (Exception ex)
             {
