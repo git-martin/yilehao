@@ -43,7 +43,7 @@ namespace AutoSendOrders
         }
         static void timer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            var checkPoint = DateTime.Now.Date.AddHours(20).AddMinutes(38);
+            var checkPoint = DateTime.Now.Date.AddHours(18).AddMinutes(54);
             try
             {
                 var now = DateTime.Now;

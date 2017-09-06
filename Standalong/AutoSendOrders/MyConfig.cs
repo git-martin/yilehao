@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.ServiceProcess;
 
 namespace AutoSendOrders
 {
     public static class MyConfig
     {
-        public class QQEnterpriseMailSmtpInfo
+        public class QqEnterpriseMailSmtpInfo
         {
             public string EmailAccount { get; set; }
             public string EmailPassword { get; set; }
@@ -16,20 +17,6 @@ namespace AutoSendOrders
             public int Port { get { return 25; } }
             public string Host { get { return "smtp.exmail.qq.com"; } }
             public bool EnableSsl { get { return false; } }
-        }
-
-        public class QQMailSmtpInfo
-        {
-            public string EmailAccount { get; set; }
-            public string EmailPassword { get; set; }
-            public string Title { get; set; }
-
-            public int Port { get { return EnableSsl?465:587; } }
-
-            public string MailNickName { get { return "yilehao"; } }
-            public string Host { get { return "smtp.qq.com"; } }
-
-            public bool EnableSsl { get { return true; } }
         }
 
         public class MonitorStatus
@@ -57,7 +44,7 @@ namespace AutoSendOrders
         /// <summary>
         /// 表名字
         /// </summary>
-        public static QQEnterpriseMailSmtpInfo SmtpInfoConfig
+        public static QqEnterpriseMailSmtpInfo SmtpInfoConfig
         {
             get
             {
@@ -71,7 +58,7 @@ namespace AutoSendOrders
                 {
                     throw new Exception("QQEnterpriseMailSmtpInfo格式配置不正确");
                 }
-                var ret = new QQEnterpriseMailSmtpInfo
+                var ret = new QqEnterpriseMailSmtpInfo
                 {
                     EmailAccount = infos[0],
                     EmailPassword = infos[1],
@@ -82,33 +69,9 @@ namespace AutoSendOrders
         }
 
 
-        public static QQMailSmtpInfo QqMailSmtpInfo
-        {
-            get
-            {
-                var value = ConfigurationManager.AppSettings["QQMailSmtpInfo"].ToString();
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    throw new Exception("QQMailSmtpInfo未配置或者配置不正确");
-                }
-                var infos = value.Split(':');
-                if (infos == null || infos.Length != 3)
-                {
-                    throw new Exception("QQMailSmtpInfo格式配置不正确");
-                }
-                var ret = new QQMailSmtpInfo
-                {
-                    EmailAccount = infos[0],
-                    EmailPassword = infos[1],
-                    Title = infos[2],
-                };
-                return ret;
-            }
-        }
-
         /// <summary>
         /// </summary>
-        public static string ToEmails
+        public static List<string> ToEmails
         {
             get
             {
@@ -117,7 +80,24 @@ namespace AutoSendOrders
                 {
                     throw new Exception("ToEmails未配置或者配置不正确");
                 }
-                return value;
+                var tmp = value.Split(';');
+                return tmp.ToList();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public static List<string> BccEmails
+        {
+            get
+            {
+                var value = ConfigurationManager.AppSettings["BccEmails"].ToString();
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    throw new Exception("CcEmails未配置或者配置不正确");
+                }
+                var tmp = value.Split(';');
+                return tmp.ToList();
             }
         }
 

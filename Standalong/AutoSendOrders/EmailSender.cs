@@ -16,9 +16,12 @@ namespace AutoSendOrders
 
         public static void SendEmail(List<Order> list)
         {
-            var smtp = MyConfig.QqMailSmtpInfo;
+            var smtp = MyConfig.SmtpInfoConfig;
             var msg = new MailMessage();
-            msg.To.Add(MyConfig.ToEmails);//收件人地址  
+            if (MyConfig.ToEmails.Any())
+                MyConfig.ToEmails.ForEach(a=>msg.To.Add(a));
+            if(MyConfig.BccEmails.Any())
+                MyConfig.BccEmails.ForEach(a => msg.Bcc.Add(a));
             msg.From = new MailAddress(smtp.EmailAccount, smtp.MailNickName);//发件人邮箱，名称
             msg.Subject = string.Format("警告:检查到服务<{0}>未运行！", "");//邮件标题  
             msg.SubjectEncoding = Encoding.UTF8;//标题格式为UTF8  
@@ -32,11 +35,11 @@ namespace AutoSendOrders
                 //QQ 企业邮箱不支持用SSL
                 //Port = 465,
                 //EnableSsl = true,
-                Port = 465,
-                EnableSsl = true,
+                Port = smtp.Port,
+                EnableSsl = smtp.EnableSsl,
                 Timeout = 120 * 1000,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = true,
+                UseDefaultCredentials = false,
                 Credentials = new NetworkCredential(smtp.EmailAccount, smtp.EmailPassword),
             };
 
