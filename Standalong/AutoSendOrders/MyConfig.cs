@@ -15,7 +15,7 @@ namespace AutoSendOrders
             public string MailNickName { get; set; }
 
             public int Port { get { return 25; } }
-            public string Host { get { return "smtp.exmail.qq.com"; } }
+            public string Host { get { return "smtp.exmail.qq.com"; ; } }
             public bool EnableSsl { get { return false; } }
         }
 
@@ -68,7 +68,6 @@ namespace AutoSendOrders
             }
         }
 
-
         /// <summary>
         /// </summary>
         public static List<string> ToEmails
@@ -81,7 +80,7 @@ namespace AutoSendOrders
                     throw new Exception("ToEmails未配置或者配置不正确");
                 }
                 var tmp = value.Split(';');
-                return tmp.ToList();
+                return tmp.Where(a => !string.IsNullOrEmpty(a)).ToList();
             }
         }
 
@@ -92,12 +91,28 @@ namespace AutoSendOrders
             get
             {
                 var value = ConfigurationManager.AppSettings["BccEmails"].ToString();
-                if (string.IsNullOrWhiteSpace(value))
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-                    throw new Exception("CcEmails未配置或者配置不正确");
+                    var tmp = value.Split(';');
+                    return tmp.Where(a => !string.IsNullOrEmpty(a)).ToList();
                 }
-                var tmp = value.Split(';');
-                return tmp.ToList();
+                return new List<string>();
+            }
+        }
+
+        /// <summary>
+        /// </summary>
+        public static List<string> CcEmails
+        {
+            get
+            {
+                var value = ConfigurationManager.AppSettings["CcEmails"].ToString();
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    var tmp = value.Split(';');
+                    return tmp.Where(a => !string.IsNullOrEmpty(a)).ToList();
+                }
+                return new List<string>();
             }
         }
 

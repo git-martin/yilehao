@@ -109,6 +109,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="EmailTemplate.html" />
     <Content Include="favor.ico" />
     <Content Include="favor1.ico" />
   </ItemGroup>
