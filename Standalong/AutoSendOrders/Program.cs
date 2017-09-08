@@ -18,7 +18,7 @@ namespace AutoSendOrders
             {
                 _timer = new System.Timers.Timer();
                 _timer.Elapsed += timer_Elapsed;
-                _timer.Interval = MyConfig.OrderCheckTimeSpan * 1000;
+                _timer.Interval = MyConfig.OrderCheckTimeSpan * 100;
                 _timer.Enabled = true;
             }
             catch (Exception ex)
@@ -45,18 +45,18 @@ namespace AutoSendOrders
         {
             try
             {
+                _timer.Enabled = false;
                 SendOrderEmail();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
-            Console.WriteLine();
         }
 
         public static void SendOrderEmail()
         {
-            var checkPoint = DateTime.Now.Date.AddHours(18).AddMinutes(44);
+            var checkPoint = DateTime.Now.Date.AddHours(15);
             var now = DateTime.Now;
             var span = (now - checkPoint).TotalSeconds;
             bool needSendEmail = 0 < span && span < MyConfig.OrderCheckTimeSpan;
@@ -68,7 +68,7 @@ namespace AutoSendOrders
                 }
                 return;
             }
-             var start = checkPoint.AddDays(-34);
+            var start = checkPoint.AddDays(-1);
             var data = EmailSender.GetTodayOrders(start, checkPoint);
             if (data == null || !data.Any())
             {

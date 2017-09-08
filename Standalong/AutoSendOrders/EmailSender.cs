@@ -15,6 +15,14 @@ namespace AutoSendOrders
     {
         public static void SendEmail(List<Order> list, DateTime start, DateTime end)
         {
+
+            //var path = "D:/SVN/yilehao/Standalong/AutoSendOrders/EmailTemplate.html";
+            //using (StreamWriter sw = new StreamWriter(path, false, Encoding.UTF8))
+            //{
+            //    sw.Write(BuildEmailBody(list, start, end));
+            //}
+            //return;
+
             var smtp = MyConfig.SmtpInfoConfig;
             var msg = new MailMessage
             {
@@ -52,8 +60,7 @@ namespace AutoSendOrders
                 var ms = new MemoryStream();
                 book.Write(ms);
                 ms.Seek(0, SeekOrigin.Begin);
-                var dt = DateTime.Now;
-                var dateTime = dt.ToString("yyMMddHHmmssfff");
+                var dateTime = end.ToString("yyMMddHHmmss");
                 var fileName = "订单列表" + dateTime + ".xls";
                 msg.Attachments.Add(new Attachment(ms, fileName));
             }
@@ -65,7 +72,7 @@ namespace AutoSendOrders
         {
             var total = 0;
             var unshipped = 0;
-            var detalHtml = "<div style='border-top:1px dotted #ccc; color: #0000ff;font-size: 16px;padding:10px'>今日无订单，请进网站后台确认</div>";
+            var detalHtml = "<div style='border-top:1px dotted #ccc; color: #0000ff;font-size: 16px;padding:10px'>今日无订单，请进网站后台确认以免是通知错误！！！</div>";
             if (list != null && list.Any())
             {
                 total = list.Count;
@@ -76,7 +83,7 @@ namespace AutoSendOrders
                 detalHtml = tmp;
 
             var sb = new StringBuilder();
-            sb.Append("<div style='color:#0000ff;'>");
+            sb.Append("<div style='color:#0000ff;width:100%;word-wrap:break-word;white-space:nowrap;'>");
             sb.AppendFormat(@"
             <h3>每日待发货订单汇总：</h3> 
             <ul style='border-left: 10px solid #ccc;color:#0000ff;line-height: 24px;'>
@@ -87,7 +94,7 @@ namespace AutoSendOrders
             <div>{4}</div>
             <div style='border-top:1px dotted #ccc; color: #0000ff;font-size: 12px;'>
                 注：
-                <br> - 每天统计时间段是前天是15：00（不包含）至今天的15：00（包含）
+                <br> - 统计时间段是从昨天15：00（不包含）至今天的15：00（包含）的付款时间
                 <br> - 订单发货信息如果没有及时录入系统则可能订单重复，请注意！！！
             </div>", start.ToString("yyyy-MM-dd hh:MM:ss"),
                    end.ToString("yyyy-MM-dd hh:MM:ss"),
@@ -104,68 +111,78 @@ namespace AutoSendOrders
             if (list == null || !list.Any())
                 return string.Empty;
 
-            var builder = new StringBuilder("<table cellspacing='0' style='border: solid 1px #a9c6c9;border-collapse: collapse;'>");
-            builder.Append("<tr align='left' valign='top' style='border: solid 1px #a9c6c9;font-weight: bold;padding: 8px;background-color:#c3dde0;'>");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "序号");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "订单号");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "商品名称");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "规格");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "数量");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "下单时间");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "收货人");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "收货地址");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "联系电话");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "商品总价");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "物流费用");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "积分折抵");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "应付金额");
-            builder.AppendFormat("<td align='left' valign='top'>{0}</td>", "订单状态");
+            var builder = new StringBuilder("<table cellspacing='0' style='border:solid 1px #a9c6c9;border-collapse:collapse;width:100%;word-wrap:break-word;white-space:nowrap;'>");
+            builder.Append("<tr style='border:solid 1px #a9c6c9;font-weight:bold;padding:8px;background-color:#c3dde0;border-collapse:collapse;'>");
+            builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "序号");
+            builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "订单号");
+            builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "订单状态");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "商品名称");
+            builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "商品/规格/购买数量");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "数量");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "下单时间");
+            builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "收件人");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "收货地址");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "联系电话");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "商品总价");
+            //builder.AppendFormat("<td nowrap='nowrap'>{0}</td>", "物流费用");
+       
             builder.Append("</tr>");
             var i = 0;
             foreach (var item in list)
             {
                 i++;
-                string n = "";
+                string name = "";
                 string m = "";
                 string k = "";
+                string info = "";
                 for (int j = 0; j < item.OrderGoods.Count; j++)
                 {
-                    if (j == item.OrderGoods.Count - 1)
-                    {
-                        n += item.OrderGoods[j].GoodsName;
-                        m += item.OrderGoods[j].GoodsAttribute;
-                        k += item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit;
-                    }
-                    else
-                    {
-                        n += item.OrderGoods[j].GoodsName + "\n";
-                        m += item.OrderGoods[j].GoodsAttribute + "\n";
-                        k += item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit + "\n";
-                    }
+                    //if (j == item.OrderGoods.Count - 1)
+                    //{
+                    //    name += item.OrderGoods[j].GoodsName;
+                    //    m += item.OrderGoods[j].GoodsAttribute + "【" + item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit+"】"; ;
+                    //    //k += item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit;
+                    //}
+                    //else
+                    //{
+                    //    name += item.OrderGoods[j].GoodsName + "</br>";
+                    //    m += item.OrderGoods[j].GoodsAttribute + "【" + item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit + "】" + "</br>"; 
+                    //    //k += item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit + "</br>";
+                    //}
+                    info += string.Format("{0}/{1}【{2}】<br>",
+                        item.OrderGoods[j].GoodsName,
+                        item.OrderGoods[j].GoodsAttribute,
+                        item.OrderGoods[j].Quantity + item.OrderGoods[j].Unit
+                       );
                 }
-                var tdSyleAlt = "style='border:1px solid ##a9c6c9;padding:8px;background-color:#d4e3e5;border-collapse: collapse;'";
-                var tdSyleAltOdd = "style='border:1px solid ##a9c6c9;padding:8px;background-color:#c3dde0;border-collapse: collapse;'";
+                info = item.PayTime.GetValueOrDefault().ToString("yyyy-MM-dd hh:MM:ss") + "<br>" + info + "总价：￥" +
+                       item.GoodsAmount.ToString("#0.00");
+                const string tdSyleAlt = "style='border:1px solid #a9c6c9;padding:8px;background-color:#d4e3e5;border-collapse: collapse;'";
+                const string tdSyleAltOdd = "style='border:1px solid #a9c6c9;padding:8px;background-color:#c3dde0;border-collapse: collapse;'";
                 var rowStyle = i%2 == 1 ? tdSyleAlt : tdSyleAltOdd;
                 builder.Append("<tr align='left' valign='top'>");
                 builder.AppendFormat("<td {1}>{0}</td>", i,rowStyle);
                 builder.AppendFormat("<td {1}>{0}</td>", item.OrderNo, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", n, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", m, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", k, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.CreateTime, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.Consignee, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.PCDS + item.Address, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.Tel, rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.GoodsAmount.ToString("#0.00"), rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.ShippingFee.ToString("#0.00"), rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.IntegralMoney.ToString("#0.00"), rowStyle);
-                builder.AppendFormat("<td {1}>{0}</td>", item.PayFee.ToString("#0.00"), rowStyle);
                 var statusName = item.OrderStatus.Description();
                 if (item.RefundStatus > 0)
                     statusName += "(" + item.RefundStatus.Description() + ")";
                 if (item.EvaluateStatus > 0)
                     statusName += "(" + item.EvaluateStatus.Description() + ")";
                 builder.AppendFormat("<td {1}>{0}</td>", statusName, rowStyle);
+                builder.AppendFormat("<td {1}>{0}</td>", info, rowStyle);
+                //builder.AppendFormat("<td {1} align='right'>{0}</td>", m, rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", k, rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", item.CreateTime, rowStyle);
+                var deliveryAddress = string.Concat("收件人：" + item.Consignee, 
+                    "<br>", "收件地址：" + item.PCDS + item.Address,
+                    "<br>", "电话：" + item.Tel);
+                builder.AppendFormat("<td {1}>{0}</td>", deliveryAddress, rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", item.Consignee, rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", item.PCDS + item.Address, rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", item.Tel, rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", item.GoodsAmount.ToString("#0.00"), rowStyle);
+                //builder.AppendFormat("<td {1}>{0}</td>", item.ShippingFee.ToString("#0.00"), rowStyle);
+          
                 builder.Append("</tr>");
             }
             builder.Append("</table>");
@@ -258,7 +275,7 @@ namespace AutoSendOrders
                     .Where(o => o.PayStatus == PayStatus.Paid
                         //&& o.ShippingStatus == ShippingStatus.Shipped
                         && o.PayTime > start
-                        && o.PayTime <= end);
+                        && o.PayTime <= end).OrderByDescending(x=>x.PayTime);
                 var data = query.ToList();
                 return data;
             }
