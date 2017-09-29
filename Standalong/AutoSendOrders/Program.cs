@@ -18,7 +18,7 @@ namespace AutoSendOrders
             {
                 _timer = new System.Timers.Timer();
                 _timer.Elapsed += timer_Elapsed;
-                _timer.Interval = MyConfig.OrderCheckTimeSpan * 100;
+                _timer.Interval = MyConfig.OrderCheckTimeSpan * 1000;
                 _timer.Enabled = true;
             }
             catch (Exception ex)
@@ -45,7 +45,6 @@ namespace AutoSendOrders
         {
             try
             {
-                _timer.Enabled = false;
                 SendOrderEmail();
             }
             catch (Exception ex)
@@ -56,10 +55,10 @@ namespace AutoSendOrders
 
         public static void SendOrderEmail()
         {
-            var checkPoint = DateTime.Now.Date.AddHours(15);
+            var checkPoint = DateTime.Now.Date.AddHours(15).AddMinutes(00);
             var now = DateTime.Now;
             var span = (now - checkPoint).TotalSeconds;
-            bool needSendEmail = 0 < span && span < MyConfig.OrderCheckTimeSpan;
+            bool needSendEmail = 0 < span && span < MyConfig.OrderCheckTimeSpan+1;
             if (!needSendEmail)
             {
                 if (now.Minute % 10 == 8)
